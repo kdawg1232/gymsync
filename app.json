@@ -23,7 +23,8 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "GymSync needs camera access to log your workouts with photos.",
-        "NSPhotoLibraryUsageDescription": "GymSync needs photo library access to select workout photos."
+        "NSPhotoLibraryUsageDescription": "GymSync needs photo library access to select workout photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -31,7 +32,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0A"
       },
-      "package": "com.kdigavalli.gymsync"
+      "package": "com.kdigavalli.gymsync",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -65,6 +69,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3a3c000-50bb-4232-bf26-37bf5aa68ed6"
+      }
     }
   }
 }
