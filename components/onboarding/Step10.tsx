@@ -1,20 +1,14 @@
-import { useState } from 'react';
-import { View, Text, Pressable, Image, Alert, ActivityIndicator } from 'react-native';
-import { ImageIcon, Camera } from 'lucide-react-native';
+import { View, Text, Pressable, Image } from 'react-native';
+import { Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadAvatar } from '@/lib/storage';
-import { updateProfile } from '@/lib/database';
 import { useApp } from '@/context/AppContext';
-import { Colors } from '@/constants/colors';
 
 interface Props {
   nextStep: () => void;
 }
 
 export function Step10({ nextStep }: Props) {
-  const { user, refreshProfile } = useApp();
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const { onboardingAvatarUri, setOnboardingAvatarUri } = useApp();
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -24,23 +18,12 @@ export function Step10({ nextStep }: Props) {
       quality: 0.8,
     });
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      setOnboardingAvatarUri(result.assets[0].uri);
     }
   };
 
-  const handleUpload = async () => {
-    if (!imageUri || !user) return;
-    setUploading(true);
-    try {
-      const url = await uploadAvatar(user.id, imageUri);
-      await updateProfile(user.id, { avatar_url: url });
-      await refreshProfile();
-      nextStep();
-    } catch (e: any) {
-      Alert.alert('Upload Failed', e.message ?? 'Please try again.');
-    } finally {
-      setUploading(false);
-    }
+  const handleContinue = () => {
+    nextStep();
   };
 
   return (
@@ -55,9 +38,9 @@ export function Step10({ nextStep }: Props) {
           <View className="absolute inset-0 rounded-full border-2 border-dashed border-white/20" />
 
           <View className="absolute top-2 left-2 right-2 bottom-2 bg-[#1A1A1A] rounded-full items-center justify-center border border-white/5 overflow-hidden">
-            {imageUri ? (
+            {onboardingAvatarUri ? (
               <Image
-                source={{ uri: imageUri }}
+                source={{ uri: onboardingAvatarUri }}
                 className="w-full h-full"
                 style={{ resizeMode: 'cover' }}
               />
@@ -75,19 +58,15 @@ export function Step10({ nextStep }: Props) {
       </View>
 
       <View className="w-full pb-8 pt-4 max-w-sm px-4 gap-3">
-        {imageUri && (
+        {onboardingAvatarUri && (
           <Pressable
-            onPress={handleUpload}
-            disabled={uploading}
-            className="w-full bg-pastel-purple py-4 rounded-2xl items-center active:opacity-80 flex-row justify-center gap-2"
+            onPress={handleContinue}
+            className="w-full bg-pastel-purple py-4 rounded-2xl items-center active:opacity-80"
           >
-            {uploading && <ActivityIndicator color="#000" size="small" />}
-            <Text className="text-black font-bold text-lg">
-              {uploading ? 'Uploading...' : 'Use This Photo'}
-            </Text>
+            <Text className="text-black font-bold text-lg">Use This Photo</Text>
           </Pressable>
         )}
-        {imageUri ? (
+        {onboardingAvatarUri ? (
           <Pressable
             onPress={pickImage}
             className="w-full bg-white/10 py-4 rounded-2xl items-center border border-white/10 active:opacity-80"

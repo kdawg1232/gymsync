@@ -4,12 +4,13 @@ import { Colors } from '@/constants/colors';
 
 interface Props {
   nextStep: () => void;
+  onSignIn?: () => void;
 }
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const SKIPPED = [0, 1, 3, 4, 6];
 
-export function Step0({ nextStep }: Props) {
+export function Step0({ nextStep, onSignIn }: Props) {
   return (
     <View className="flex-1 items-center pt-16 w-full">
       <View className="flex-1 w-full max-w-sm justify-center gap-10 px-4">
@@ -58,13 +59,22 @@ export function Step0({ nextStep }: Props) {
         </View>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pb-8 pt-4 max-w-sm px-4 gap-4">
         <Pressable
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"
         >
-          <Text className="text-black font-bold text-lg">There's a fix</Text>
+          <Text className="text-black font-bold text-lg">Let's fix this</Text>
         </Pressable>
+
+        {onSignIn && (
+          <Pressable onPress={onSignIn} className="py-2 items-center">
+            <Text className="text-white/40 text-sm">
+              Already have an account?{' '}
+              <Text className="text-pastel-orange font-bold">Sign in</Text>
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );

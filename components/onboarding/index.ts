@@ -11,5 +11,6 @@ export { Step8 } from './Step8';
 export { Step9 } from './Step9';
 export { Step10 } from './Step10';
 export { Step11 } from './Step11';
+export { StepCreateAccount } from './StepCreateAccount';
 export { Step12 } from './Step12';
 export { Step13 } from './Step13';

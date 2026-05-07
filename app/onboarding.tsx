@@ -32,10 +32,15 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
+  const handleSignIn = () => {
+    router.push('/sign-in');
+  };
+
   return (
     <View className="flex-1 bg-[#0A0A0A]">
       <OnboardingFlow
         onComplete={handleComplete}
+        onSignIn={handleSignIn}
         goal={onboardingGoal}
         setGoal={setOnboardingGoal}
         wager={onboardingWager}

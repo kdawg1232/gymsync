@@ -15,11 +15,15 @@ import { Step8 } from './Step8';
 import { Step9 } from './Step9';
 import { Step10 } from './Step10';
 import { Step11 } from './Step11';
+import { StepCreateAccount } from './StepCreateAccount';
 import { Step12 } from './Step12';
 import { Step13 } from './Step13';
 
+const TOTAL_STEPS = 14;
+
 interface Props {
   onComplete: () => void;
+  onSignIn: () => void;
   goal: number;
   setGoal: (v: number) => void;
   wager: string;
@@ -30,6 +34,7 @@ interface Props {
 
 export function OnboardingFlow({
   onComplete,
+  onSignIn,
   goal,
   setGoal,
   wager,
@@ -40,7 +45,7 @@ export function OnboardingFlow({
   const [step, setStep] = useState(0);
 
   const nextStep = () => {
-    if (step < 13) setStep(step + 1);
+    if (step < TOTAL_STEPS) setStep(step + 1);
     else onComplete();
   };
 
@@ -48,12 +53,12 @@ export function OnboardingFlow({
     if (step > 0) setStep(step - 1);
   };
 
-  const progress = (step / 13) * 100;
+  const progress = (step / TOTAL_STEPS) * 100;
 
   function renderStep() {
     switch (step) {
       case 0:
-        return <Step0 nextStep={nextStep} />;
+        return <Step0 nextStep={nextStep} onSignIn={onSignIn} />;
       case 1:
         return <Step1 nextStep={nextStep} />;
       case 2:
@@ -77,8 +82,10 @@ export function OnboardingFlow({
       case 11:
         return <Step11 nextStep={nextStep} />;
       case 12:
-        return <Step12 nextStep={nextStep} />;
+        return <StepCreateAccount nextStep={nextStep} />;
       case 13:
+        return <Step12 nextStep={nextStep} />;
+      case 14:
         return <Step13 onComplete={onComplete} />;
       default:
         return null;

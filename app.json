@@ -20,6 +20,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.kdigavalli.gymsync",
       "buildNumber": "1",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "GymSync needs camera access to log your workouts with photos.",
         "NSPhotoLibraryUsageDescription": "GymSync needs photo library access to select workout photos."
@@ -59,6 +60,7 @@
         }
       ],
       "expo-secure-store",
+      "expo-apple-authentication",
       "./plugins/widget/withWidget"
     ],
     "experiments": {
