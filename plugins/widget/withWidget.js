@@ -339,21 +339,25 @@ struct GymSyncWidget: Widget {
       widgetBundleId,
     );
 
-    // Set SWIFT_VERSION and deployment target on the widget extension target
-    xcodeProject.updateBuildProperty('SWIFT_VERSION', '5.0', undefined, WIDGET_TARGET);
-    xcodeProject.updateBuildProperty(
-      'IPHONEOS_DEPLOYMENT_TARGET',
-      '15.1',
-      undefined,
-      WIDGET_TARGET,
-    );
-    xcodeProject.updateBuildProperty('TARGETED_DEVICE_FAMILY', '1', undefined, WIDGET_TARGET);
-    xcodeProject.updateBuildProperty(
-      'CODE_SIGN_ENTITLEMENTS',
-      `${WIDGET_TARGET}/${WIDGET_TARGET}.entitlements`,
-      undefined,
-      WIDGET_TARGET,
-    );
+    // Set build settings on every config whose PRODUCT_NAME matches the widget.
+    // updateBuildProperty/target-based lookups don't work reliably for
+    // dynamically added extension targets, so we match by product name instead.
+    const configs = xcodeProject.pbxXCBuildConfigurationSection();
+    for (const key of Object.keys(configs)) {
+      const cfg = configs[key];
+      if (
+        cfg &&
+        cfg.buildSettings &&
+        (cfg.buildSettings.PRODUCT_NAME === WIDGET_TARGET ||
+         cfg.buildSettings.PRODUCT_NAME === `"${WIDGET_TARGET}"`)
+      ) {
+        cfg.buildSettings.SWIFT_VERSION = '5.0';
+        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = '15.1';
+        cfg.buildSettings.TARGETED_DEVICE_FAMILY = '"1"';
+        cfg.buildSettings.CODE_SIGN_ENTITLEMENTS =
+          `"${WIDGET_TARGET}/${WIDGET_TARGET}.entitlements"`;
+      }
+    }
 
     // Add build phases
     xcodeProject.addBuildPhase(
