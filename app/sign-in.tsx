@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
-import { Mail, Lock, ChevronLeft } from 'lucide-react-native';
+import { Mail, Lock } from 'lucide-react-native';
 import { signIn, signInWithApple, signInWithGoogle } from '@/lib/auth';
 import { Colors } from '@/constants/colors';
 
@@ -84,14 +84,7 @@ export default function SignInScreen() {
           className="flex-1 px-6"
         >
           {/* Header */}
-          <View className="pt-14 pb-4">
-            <Pressable
-              onPress={() => router.back()}
-              className="w-10 h-10 items-center justify-center -ml-2"
-            >
-              <ChevronLeft size={24} color="rgba(255,255,255,0.6)" />
-            </Pressable>
-          </View>
+          <View className="pt-14 pb-4" />
 
           <View className="flex-1 max-w-sm w-full self-center">
             <Text className="text-4xl font-black text-white mb-2">
@@ -201,7 +194,7 @@ export default function SignInScreen() {
 
             {/* Back to onboarding */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => router.push('/onboarding')}
               className="mt-6 py-4 items-center"
             >
               <Text className="text-white/40 text-sm">

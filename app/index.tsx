@@ -13,9 +13,16 @@ export default function Index() {
     );
   }
 
+  // User is fully set up → go to main app
   if (session && profile) {
     return <Redirect href="/(tabs)" />;
   }
 
-  return <Redirect href="/onboarding" />;
+  // User has session but no profile → continue onboarding (mid-setup)
+  if (session && !profile) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  // No session → show sign-in screen for returning users
+  return <Redirect href="/sign-in" />;
 }

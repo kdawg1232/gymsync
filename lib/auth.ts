@@ -1,7 +1,6 @@
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as AuthSession from 'expo-auth-session';
-import * as Crypto from 'expo-crypto';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from './supabase';
 
 function generateInviteCode(): string {
@@ -66,49 +65,43 @@ export async function signInWithApple() {
 
 // ── Google Sign In ──
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
-
 export async function signInWithGoogle() {
-  if (!GOOGLE_CLIENT_ID) {
-    throw new Error(
-      'Google Sign In is not configured. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in your .env file.',
-    );
-  }
+  const redirectTo = 'gymsync://google-auth';
 
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'gymsync' });
-  const nonce = Math.random().toString(36).substring(2);
-  const hashedNonce = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    nonce,
-  );
-
-  const discovery = {
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  };
-
-  const request = new AuthSession.AuthRequest({
-    clientId: GOOGLE_CLIENT_ID,
-    redirectUri,
-    scopes: ['openid', 'profile', 'email'],
-    responseType: AuthSession.ResponseType.IdToken,
-    extraParams: { nonce: hashedNonce },
-  });
-
-  const result = await request.promptAsync(discovery);
-
-  if (result.type !== 'success' || !result.params.id_token) {
-    throw new Error('Google Sign In was cancelled or failed.');
-  }
-
-  const { data, error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    token: result.params.id_token,
-    nonce,
+    options: {
+      redirectTo,
+      skipBrowserRedirect: true,
+    },
   });
 
   if (error) throw error;
-  return data;
+  if (!data.url) throw new Error('No URL returned from Supabase.');
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, 'gymsync://');
+
+  if (result.type !== 'success') {
+    throw new Error('Google Sign In was cancelled.');
+  }
+
+  const hashIndex = result.url.indexOf('#');
+  if (hashIndex === -1) throw new Error('No session data returned.');
+
+  const params = new URLSearchParams(result.url.substring(hashIndex + 1));
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+
+  if (!access_token || !refresh_token) {
+    throw new Error('Missing tokens from Google Sign In response.');
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token,
+    refresh_token,
+  });
+
+  if (sessionError) throw sessionError;
 }
 
 // ── Profile creation (shared by email sign-up and OAuth) ──

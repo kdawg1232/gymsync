@@ -46,6 +46,19 @@ CREATE TABLE notification_preferences (
 );
 
 -- ═══════════════════════════════════════
+-- TABLE PERMISSIONS
+-- ═══════════════════════════════════════
+
+GRANT ALL ON TABLE profiles TO authenticated;
+GRANT ALL ON TABLE profiles TO service_role;
+GRANT ALL ON TABLE pacts TO authenticated;
+GRANT ALL ON TABLE pacts TO service_role;
+GRANT ALL ON TABLE workout_logs TO authenticated;
+GRANT ALL ON TABLE workout_logs TO service_role;
+GRANT ALL ON TABLE notification_preferences TO authenticated;
+GRANT ALL ON TABLE notification_preferences TO service_role;
+
+-- ═══════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════
 

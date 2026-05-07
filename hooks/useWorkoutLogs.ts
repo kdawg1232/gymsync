@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { startOfWeek } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { getWorkoutLogs } from '@/lib/database';
 import type { WorkoutLog } from '@/types';
+
+let channelCounter = 0;
 
 export function useWorkoutLogs(
   userId: string | undefined,
@@ -11,6 +13,7 @@ export function useWorkoutLogs(
 ) {
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchRef = useRef<() => Promise<void>>();
 
   const fetchLogs = useCallback(async () => {
     if (!userId) return;
@@ -31,20 +34,23 @@ export function useWorkoutLogs(
     }
   }, [userId, partnerId, options?.currentWeekOnly, options?.limit]);
 
+  fetchRef.current = fetchLogs;
+
   useEffect(() => {
-    fetchLogs();
+    fetchRef.current?.();
 
     if (!userId) return;
 
+    const id = ++channelCounter;
     const channel = supabase
-      .channel(`logs-${userId}`)
+      .channel(`logs-${userId}-${id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'workout_logs' },
         (payload) => {
           const row = payload.new as WorkoutLog;
           if (row.user_id === userId || row.user_id === partnerId) {
-            fetchLogs();
+            fetchRef.current?.();
           }
         },
       )
@@ -53,7 +59,7 @@ export function useWorkoutLogs(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, partnerId, fetchLogs]);
+  }, [userId, partnerId]);
 
   return { logs, loading, refetch: fetchLogs };
 }
