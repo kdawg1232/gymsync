@@ -1,13 +1,44 @@
 import { useState } from 'react';
-import { View, Text, Pressable, TextInput } from 'react-native';
+import { View, Text, Pressable, TextInput, Alert } from 'react-native';
 import { MotiView } from 'moti';
 import { Settings, Target, Flame, Coffee } from 'lucide-react-native';
 import { useApp } from '@/context/AppContext';
+import { updatePact } from '@/lib/database';
 import { Colors } from '@/constants/colors';
 
 export default function RulesScreen() {
-  const { goal, setGoal, wager, setWager } = useApp();
+  const { goal, wager, pact, refreshPact } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const [editGoal, setEditGoal] = useState(goal);
+  const [editWager, setEditWager] = useState(wager);
+  const [saving, setSaving] = useState(false);
+
+  const startEditing = () => {
+    setEditGoal(goal);
+    setEditWager(wager);
+    setIsEditing(true);
+  };
+
+  const saveChanges = async () => {
+    if (!pact) {
+      Alert.alert('No Pact', 'Complete onboarding and pair with a partner first.');
+      setIsEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await updatePact(pact.id, { goal: editGoal, wager: editWager });
+      await refreshPact();
+      setIsEditing(false);
+    } catch (e: any) {
+      Alert.alert('Error', e.message ?? 'Could not save changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayGoal = isEditing ? editGoal : goal;
+  const displayWager = isEditing ? editWager : wager;
 
   return (
     <MotiView
@@ -18,11 +49,14 @@ export default function RulesScreen() {
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-3xl font-bold text-pastel-pink">Weekly Rules</Text>
         <Pressable
-          onPress={() => setIsEditing(!isEditing)}
+          onPress={isEditing ? saveChanges : startEditing}
+          disabled={saving}
           className="bg-white/10 px-4 py-2 rounded-full flex-row items-center gap-2 active:opacity-80"
         >
           <Settings size={16} color="#fff" />
-          <Text className="text-white text-sm font-medium">{isEditing ? 'Save' : 'Edit'}</Text>
+          <Text className="text-white text-sm font-medium">
+            {saving ? 'Saving...' : isEditing ? 'Save' : 'Edit'}
+          </Text>
         </Pressable>
       </View>
 
@@ -44,14 +78,14 @@ export default function RulesScreen() {
           {isEditing ? (
             <View className="flex-row items-center bg-black/40 p-3 rounded-2xl justify-between border border-white/10">
               <Pressable
-                onPress={() => setGoal(Math.max(1, goal - 1))}
+                onPress={() => setEditGoal(Math.max(1, editGoal - 1))}
                 className="w-12 h-12 bg-white/10 rounded-xl items-center justify-center active:opacity-80"
               >
                 <Text className="text-2xl font-bold text-white">-</Text>
               </Pressable>
-              <Text className="text-5xl font-black text-white">{goal}</Text>
+              <Text className="text-5xl font-black text-white">{displayGoal}</Text>
               <Pressable
-                onPress={() => setGoal(Math.min(7, goal + 1))}
+                onPress={() => setEditGoal(Math.min(7, editGoal + 1))}
                 className="w-12 h-12 bg-white/10 rounded-xl items-center justify-center active:opacity-80"
               >
                 <Text className="text-2xl font-bold text-white">+</Text>
@@ -59,7 +93,7 @@ export default function RulesScreen() {
             </View>
           ) : (
             <View className="flex-row items-baseline gap-2">
-              <Text className="text-7xl font-black text-white">{goal}</Text>
+              <Text className="text-7xl font-black text-white">{displayGoal}</Text>
               <Text className="text-2xl font-medium text-white/50">workouts</Text>
             </View>
           )}
@@ -81,8 +115,8 @@ export default function RulesScreen() {
           {isEditing ? (
             <View className="bg-black/40 p-4 rounded-2xl border border-white/10">
               <TextInput
-                value={wager}
-                onChangeText={setWager}
+                value={displayWager}
+                onChangeText={setEditWager}
                 className="text-2xl font-bold text-pastel-orange"
                 placeholderTextColor="rgba(255,255,255,0.2)"
                 placeholder="e.g. 1 Coffee"
@@ -94,7 +128,7 @@ export default function RulesScreen() {
                 <Coffee size={24} color="#ff8c00" />
               </View>
               <Text className="text-3xl font-bold text-pastel-orange uppercase tracking-wide flex-1">
-                {wager}
+                {displayWager}
               </Text>
             </View>
           )}

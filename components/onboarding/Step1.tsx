@@ -1,43 +1,84 @@
 import { View, Text, Pressable } from 'react-native';
-import { ArrowRight, Users } from 'lucide-react-native';
+import Svg, { Line, Circle as SvgCircle } from 'react-native-svg';
+import { User } from 'lucide-react-native';
+import { Colors } from '@/constants/colors';
 
 interface Props {
   nextStep: () => void;
+}
+
+function ProgressDots({ filled, total, color }: { filled: number; total: number; color: string }) {
+  return (
+    <View className="flex-row gap-1.5 mt-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <View
+          key={i}
+          className="w-2 h-2 rounded-full"
+          style={{ backgroundColor: i < filled ? color : 'rgba(255,255,255,0.1)' }}
+        />
+      ))}
+    </View>
+  );
 }
 
 export function Step1({ nextStep }: Props) {
   return (
     <View className="flex-1 items-center pt-16 w-full">
       <View className="flex-1 w-full max-w-sm justify-center px-4">
-        <Text className="text-3xl font-black text-white text-center leading-tight mb-16 px-4">
-          Success is <Text className="text-pastel-orange">3x more likely</Text> when shared.
-        </Text>
+        <View className="mb-14">
+          <Text className="text-3xl font-black text-white text-center leading-tight">
+            Meet your{'\n'}
+            <Text className="text-pastel-orange">accountability partner.</Text>
+          </Text>
+          <Text className="text-white/40 text-sm text-center mt-3 leading-relaxed px-2">
+            GymSync pairs you with someone who keeps{'\n'}you honest — with real proof and real stakes.
+          </Text>
+        </View>
 
-        <View className="relative w-full h-64 items-center justify-center mb-16">
-          <View className="absolute left-4 top-1/2 -translate-y-1/2 items-center gap-3">
-            <View className="w-4 h-4 rounded-full bg-white/20" />
-            <Text className="text-[10px] uppercase font-bold text-white/40 tracking-widest text-center w-16">
-              Solo Effort
-            </Text>
-          </View>
-
-          <View className="absolute left-24">
-            <ArrowRight size={24} color="rgba(255,255,255,0.1)" />
-          </View>
-
-          <View className="absolute right-4 top-1/2 -translate-y-1/2 items-center gap-3">
-            <View className="w-40 h-40 rounded-full bg-pastel-orange items-center justify-center overflow-hidden">
-              <Users size={64} color="#fff" />
+        <View className="items-center mb-14">
+          <View className="flex-row items-center gap-0">
+            <View className="items-center">
+              <View className="w-20 h-20 rounded-full bg-white/10 items-center justify-center border-2 border-white/20">
+                <User size={28} color="rgba(255,255,255,0.6)" />
+              </View>
+              <Text className="text-xs font-bold text-white/50 mt-2">You</Text>
+              <ProgressDots filled={2} total={3} color={Colors.pastelOrange} />
             </View>
-            <Text className="text-[10px] uppercase font-bold text-pastel-orange tracking-widest">
-              Partner Multiplier
+
+            <View className="mx-4 items-center">
+              <Svg width={60} height={2}>
+                <Line
+                  x1={0} y1={1} x2={60} y2={1}
+                  stroke={Colors.pastelOrange}
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                />
+              </Svg>
+              <Svg width={60} height={2} style={{ marginTop: 4 }}>
+                <Line
+                  x1={0} y1={1} x2={60} y2={1}
+                  stroke={Colors.pastelOrange}
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                />
+              </Svg>
+            </View>
+
+            <View className="items-center">
+              <View className="w-20 h-20 rounded-full bg-pastel-orange/15 items-center justify-center border-2 border-pastel-orange/40">
+                <User size={28} color={Colors.pastelOrange} />
+              </View>
+              <Text className="text-xs font-bold text-pastel-orange/70 mt-2">Partner</Text>
+              <ProgressDots filled={3} total={3} color={Colors.pastelOrange} />
+            </View>
+          </View>
+
+          <View className="mt-6 bg-[#1A1A1A] rounded-2xl border border-white/5 px-5 py-3">
+            <Text className="text-[10px] text-pastel-orange uppercase tracking-widest font-bold text-center">
+              Synced — This Week
             </Text>
           </View>
         </View>
-
-        <Text className="text-white/50 text-sm text-center leading-relaxed px-4">
-          Tracking with a partner creates a "social contract" that naturally boosts dopamine and consistency.
-        </Text>
       </View>
 
       <View className="w-full pb-8 pt-4 max-w-sm px-4">
@@ -45,7 +86,7 @@ export function Step1({ nextStep }: Props) {
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"
         >
-          <Text className="text-black font-bold text-lg">The Science Checks Out</Text>
+          <Text className="text-black font-bold text-lg">Here's how it works</Text>
         </Pressable>
       </View>
     </View>

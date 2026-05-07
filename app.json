@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0A"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.gymsync.app",
@@ -55,7 +57,9 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "./plugins/widget/withWidget"
     ],
     "experiments": {
       "typedRoutes": true

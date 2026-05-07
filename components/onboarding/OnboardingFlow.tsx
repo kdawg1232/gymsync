@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { AnimatePresence, MotiView } from 'moti';
 import { ChevronLeft } from 'lucide-react-native';
-import { Colors } from '@/constants/colors';
 
 import { Step0 } from './Step0';
 import { Step1 } from './Step1';
@@ -25,9 +24,19 @@ interface Props {
   setGoal: (v: number) => void;
   wager: string;
   setWager: (v: string) => void;
+  name: string;
+  setName: (v: string) => void;
 }
 
-export function OnboardingFlow({ onComplete, goal, setGoal, wager, setWager }: Props) {
+export function OnboardingFlow({
+  onComplete,
+  goal,
+  setGoal,
+  wager,
+  setWager,
+  name,
+  setName,
+}: Props) {
   const [step, setStep] = useState(0);
 
   const nextStep = () => {
@@ -62,7 +71,7 @@ export function OnboardingFlow({ onComplete, goal, setGoal, wager, setWager }: P
       case 8:
         return <Step8 nextStep={nextStep} wager={wager} setWager={setWager} />;
       case 9:
-        return <Step9 nextStep={nextStep} />;
+        return <Step9 nextStep={nextStep} name={name} setName={setName} />;
       case 10:
         return <Step10 nextStep={nextStep} />;
       case 11:

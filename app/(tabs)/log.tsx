@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { View, Text, Pressable, TextInput, Image } from 'react-native';
+import { View, Text, Pressable, TextInput, Image, Alert, ActivityIndicator } from 'react-native';
 import { MotiView } from 'moti';
 import { Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '@/context/AppContext';
 import { FaceIcon } from '@/components/ui/FaceIcon';
 import { cn } from '@/lib/utils';
-import { DEMO_FALLBACK_IMG } from '@/constants/demo-data';
+import { addWorkoutLog } from '@/lib/database';
+import { uploadWorkoutPhoto } from '@/lib/storage';
 import { Colors } from '@/constants/colors';
 import type { Mood } from '@/types';
 import { useRouter } from 'expo-router';
@@ -18,19 +19,13 @@ const BG_COLORS: Record<Mood, string> = {
   dead: 'bg-pastel-purple',
 };
 
-const MOOD_COLORS: Record<Mood, string> = {
-  happy: Colors.pastelOrange,
-  pumped: Colors.pastelGreen,
-  tired: Colors.pastelYellow,
-  dead: Colors.pastelPurple,
-};
-
 export default function LogScreen() {
-  const { addLog } = useApp();
+  const { user, pact, partnerName } = useApp();
   const router = useRouter();
   const [mood, setMood] = useState<Mood>('happy');
   const [caption, setCaption] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -53,18 +48,35 @@ export default function LogScreen() {
     }
   };
 
-  const submit = () => {
-    addLog({
-      id: Math.random().toString(),
-      userId: 'me',
-      userName: 'Me',
-      date: new Date(),
-      imageUrl: imageUri || DEMO_FALLBACK_IMG,
-      caption,
-      mood,
-    });
-    router.replace('/(tabs)');
+  const submit = async () => {
+    if (!user) return;
+    setSubmitting(true);
+    try {
+      let imageUrl: string | null = null;
+      if (imageUri) {
+        imageUrl = await uploadWorkoutPhoto(user.id, imageUri);
+      }
+
+      await addWorkoutLog({
+        user_id: user.id,
+        pact_id: pact?.id ?? null,
+        image_url: imageUrl,
+        caption: caption || null,
+        mood,
+      });
+
+      setMood('happy');
+      setCaption('');
+      setImageUri(null);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert('Error', e.message ?? 'Could not log workout.');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const canSubmit = !submitting && (!!imageUri || !!caption.trim());
 
   return (
     <MotiView
@@ -136,13 +148,18 @@ export default function LogScreen() {
       <View className="pb-32 px-4 pt-6">
         <Pressable
           onPress={submit}
-          disabled={!imageUri && !caption}
+          disabled={!canSubmit}
           className={cn(
-            'w-full bg-black py-5 rounded-full items-center active:opacity-80',
-            !imageUri && !caption && 'opacity-50'
+            'w-full bg-black py-5 rounded-full items-center active:opacity-80 flex-row justify-center gap-2',
+            !canSubmit && 'opacity-50'
           )}
         >
-          <Text className="text-white text-xl font-bold">Send to Sarah</Text>
+          {submitting ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : null}
+          <Text className="text-white text-xl font-bold">
+            {submitting ? 'Logging...' : `Send to ${partnerName}`}
+          </Text>
         </Pressable>
       </View>
     </MotiView>
