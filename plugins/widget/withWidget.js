@@ -1,13 +1,26 @@
-const { withXcodeProject, withInfoPlist, IOSConfig } = require('expo/config-plugins');
+const { withXcodeProject, withInfoPlist, withEntitlementsPlist } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
 const WIDGET_TARGET = 'GymSyncWidget';
-const WIDGET_BUNDLE_ID = 'com.gymsync.app.widget';
-const APP_GROUP = 'group.com.gymsync.app';
 
 function withWidgetExtension(config) {
+  const bundleIdentifier =
+    config.ios?.bundleIdentifier ?? 'com.gymsync.dev';
+  const widgetBundleId = `${bundleIdentifier}.widget`;
+  const appGroup = `group.${bundleIdentifier}`;
+
   config = withInfoPlist(config, (config) => {
+    return config;
+  });
+
+  // Add App Group entitlement so the main app and widget extension can share data
+  config = withEntitlementsPlist(config, (config) => {
+    const groups = config.modResults['com.apple.security.application-groups'] ?? [];
+    if (!groups.includes(appGroup)) {
+      groups.push(appGroup);
+    }
+    config.modResults['com.apple.security.application-groups'] = groups;
     return config;
   });
 
@@ -54,7 +67,7 @@ struct GymSyncProvider: TimelineProvider {
     }
 
     private func loadEntry() -> GymSyncEntry {
-        let defaults = UserDefaults(suiteName: "${APP_GROUP}")
+        let defaults = UserDefaults(suiteName: "${appGroup}")
         let jsonStr = defaults?.string(forKey: "widget_data") ?? ""
 
         guard let data = jsonStr.data(using: .utf8),
@@ -288,13 +301,28 @@ struct GymSyncWidget: Widget {
 
     fs.writeFileSync(path.join(widgetDir, 'Info.plist'), infoPlist);
 
+    // Write entitlements for the widget extension (App Group for shared data)
+    const widgetEntitlements = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>${appGroup}</string>
+    </array>
+</dict>
+</plist>`;
+
+    const entitlementsFileName = `${WIDGET_TARGET}.entitlements`;
+    fs.writeFileSync(path.join(widgetDir, entitlementsFileName), widgetEntitlements);
+
     // Add widget target to Xcode project
     const targetUuid = xcodeProject.generateUuid();
     const groupName = WIDGET_TARGET;
 
     // Add PBXGroup for widget files
     const widgetGroup = xcodeProject.addPbxGroup(
-      ['GymSyncWidget.swift', 'Info.plist'],
+      ['GymSyncWidget.swift', 'Info.plist', `${WIDGET_TARGET}.entitlements`],
       groupName,
       groupName,
     );
@@ -308,7 +336,23 @@ struct GymSyncWidget: Widget {
       WIDGET_TARGET,
       'app_extension',
       WIDGET_TARGET,
-      WIDGET_BUNDLE_ID,
+      widgetBundleId,
+    );
+
+    // Set SWIFT_VERSION and deployment target on the widget extension target
+    xcodeProject.updateBuildProperty('SWIFT_VERSION', '5.0', undefined, WIDGET_TARGET);
+    xcodeProject.updateBuildProperty(
+      'IPHONEOS_DEPLOYMENT_TARGET',
+      '15.1',
+      undefined,
+      WIDGET_TARGET,
+    );
+    xcodeProject.updateBuildProperty('TARGETED_DEVICE_FAMILY', '1', undefined, WIDGET_TARGET);
+    xcodeProject.updateBuildProperty(
+      'CODE_SIGN_ENTITLEMENTS',
+      `${WIDGET_TARGET}/${WIDGET_TARGET}.entitlements`,
+      undefined,
+      WIDGET_TARGET,
     );
 
     // Add build phases

@@ -18,7 +18,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.gymsync.app",
+      "bundleIdentifier": "com.kdigavalli.gymsync",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "GymSync needs camera access to log your workouts with photos.",
@@ -30,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0A"
       },
-      "package": "com.gymsync.app"
+      "package": "com.kdigavalli.gymsync"
     },
     "plugins": [
       "expo-router",
