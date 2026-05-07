@@ -3,7 +3,7 @@ import {
   View, Text, Pressable, TextInput, ScrollView, Alert,
   Image, Linking, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 import {
   Settings, X, Shield, FileText, Check, HelpCircle,
   Bell, BellOff, Clock, Smartphone, User as UserIcon,
@@ -352,21 +352,14 @@ export default function ProfileScreen() {
         </MotiView>
       </ScrollView>
 
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {showSettings && (
-          <MotiView
-            from={{ opacity: 0, translateY: 800 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            exit={{ opacity: 0, translateY: 800 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute inset-0 z-50 bg-[#0A0A0A]"
+      {/* Settings overlay */}
+      {showSettings && (
+        <View className="absolute inset-0 z-50 bg-[#0A0A0A]">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            className="flex-1"
           >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              className="flex-1"
-            >
-              <ScrollView className="flex-1" contentContainerClassName="p-6 pb-32">
+            <ScrollView className="flex-1" contentContainerClassName="p-6 pb-32">
                 <View className="flex-row justify-between items-center mb-10 pt-14">
                   <Text className="text-3xl font-black text-white">Settings</Text>
                   <Pressable
@@ -527,11 +520,10 @@ export default function ProfileScreen() {
                   </Pressable>
                   <Text className="text-white/20 text-xs text-center mt-4">GymSync v1.0.0</Text>
                 </View>
-              </ScrollView>
-            </KeyboardAvoidingView>
-          </MotiView>
-        )}
-      </AnimatePresence>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      )}
     </View>
   );
 }
