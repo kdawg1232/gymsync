@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, Pressable, TextInput, ScrollView, Alert,
-  Image, Linking, KeyboardAvoidingView, Platform,
+  Image, Linking, KeyboardAvoidingView, Platform, Modal,
 } from 'react-native';
 import { MotiView } from 'moti';
 import {
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
 import { useApp } from '@/context/AppContext';
 import { SettingsMenuItem } from '@/components/ui/SettingsMenuItem';
 import { SettingsToggle } from '@/components/ui/SettingsToggle';
@@ -52,6 +53,9 @@ export default function ProfileScreen() {
   const [changingAvatar, setChangingAvatar] = useState(false);
   const [clearingData, setClearingData] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Load notification preferences when settings open
   useEffect(() => {
@@ -187,24 +191,26 @@ export default function ProfileScreen() {
   };
 
   const changePassword = () => {
-    Alert.prompt(
-      'Change Password',
-      'Enter your new password (at least 6 characters):',
-      async (newPassword) => {
-        if (!newPassword || newPassword.length < 6) {
-          Alert.alert('Error', 'Password must be at least 6 characters.');
-          return;
-        }
-        try {
-          const { error } = await supabase.auth.updateUser({ password: newPassword });
-          if (error) throw error;
-          Alert.alert('Success', 'Password updated successfully.');
-        } catch (e: any) {
-          Alert.alert('Error', e.message ?? 'Could not change password.');
-        }
-      },
-      'secure-text',
-    );
+    setNewPassword('');
+    setPasswordModalVisible(true);
+  };
+
+  const submitPasswordChange = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters.');
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setPasswordModalVisible(false);
+      Alert.alert('Success', 'Password updated successfully.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message ?? 'Could not change password.');
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const confirmClearData = () => {
@@ -393,6 +399,52 @@ export default function ProfileScreen() {
           </View>
         </MotiView>
       </ScrollView>
+
+      {/* Change Password Modal */}
+      <Modal
+        visible={passwordModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPasswordModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1 bg-black/70 items-center justify-center px-6"
+          onPress={() => setPasswordModalVisible(false)}
+        >
+          <Pressable
+            className="w-full max-w-sm bg-[#1A1A1A] rounded-3xl p-6 gap-4"
+            onPress={() => {}}
+          >
+            <Text className="text-xl font-bold text-white text-center">Change Password</Text>
+            <Text className="text-white/50 text-sm text-center">Enter your new password (at least 6 characters).</Text>
+            <TextInput
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="New password"
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              secureTextEntry
+              autoFocus
+              className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl text-white text-lg"
+            />
+            <View className="flex-row gap-2">
+              <Pressable
+                onPress={() => setPasswordModalVisible(false)}
+                className="flex-1 py-3 items-center bg-white/10 rounded-xl"
+              >
+                <Text className="text-white font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={submitPasswordChange}
+                disabled={savingPassword || newPassword.length < 6}
+                className="flex-1 py-3 items-center bg-pastel-green rounded-xl"
+                style={savingPassword || newPassword.length < 6 ? { opacity: 0.5 } : undefined}
+              >
+                <Text className="text-black font-bold">{savingPassword ? 'Saving...' : 'Save'}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Settings overlay */}
       {showSettings && (
@@ -593,7 +645,7 @@ export default function ProfileScreen() {
                   >
                     <Text className="text-red-500 font-bold">Sign Out</Text>
                   </Pressable>
-                  <Text className="text-white/20 text-xs text-center mt-4">GymSync v1.0.0</Text>
+                  <Text className="text-white/20 text-xs text-center mt-4">GymSync v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
                 </View>
             </ScrollView>
           </KeyboardAvoidingView>

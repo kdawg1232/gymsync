@@ -41,6 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarAccessibilityLabel: 'Home',
           tabBarIcon: ({ focused }) => (
             <Home
               size={24}
@@ -53,6 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="rules"
         options={{
+          tabBarAccessibilityLabel: 'Rules',
           tabBarIcon: ({ focused }) => (
             <Target
               size={24}
@@ -65,6 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="log"
         options={{
+          tabBarAccessibilityLabel: 'Log Workout',
           tabBarIcon: () => (
             <View
               className="bg-pastel-orange rounded-full p-4"
@@ -85,6 +88,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
+          tabBarAccessibilityLabel: 'History',
           tabBarIcon: ({ focused }) => (
             <Activity
               size={24}
@@ -97,6 +101,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+          tabBarAccessibilityLabel: 'Profile',
           tabBarIcon: ({ focused }) => (
             <User
               size={24}

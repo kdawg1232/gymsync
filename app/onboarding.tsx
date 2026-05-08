@@ -27,7 +27,7 @@ export default function OnboardingScreen() {
         await refreshPact();
       }
     } catch (e) {
-      console.warn('Error creating initial pact:', e);
+      if (__DEV__) console.warn('Error creating initial pact:', e);
     }
     router.replace('/(tabs)');
   };

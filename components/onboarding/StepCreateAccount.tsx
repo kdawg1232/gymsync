@@ -38,7 +38,7 @@ export function StepCreateAccount({ nextStep }: Props) {
           await createProfileForUser(user.id, onboardingName.trim() || 'User');
           await finalizeProfile(user.id);
         } catch (e) {
-          console.warn('Auto profile creation failed:', e);
+          if (__DEV__) console.warn('Auto profile creation failed:', e);
         }
         nextStep();
       })();
@@ -51,7 +51,7 @@ export function StepCreateAccount({ nextStep }: Props) {
         const url = await uploadAvatar(userId, onboardingAvatarUri);
         await updateProfile(userId, { avatar_url: url });
       } catch (e) {
-        console.warn('Avatar upload failed, continuing:', e);
+        if (__DEV__) console.warn('Avatar upload failed, continuing:', e);
       }
     }
     await refreshProfile();
@@ -102,13 +102,7 @@ export function StepCreateAccount({ nextStep }: Props) {
   const handleGoogle = async () => {
     setOauthLoading('google');
     try {
-      const data = await signInWithGoogle();
-      if (data.user) {
-        const displayName = onboardingName.trim() || data.user.user_metadata?.full_name || 'User';
-        await createProfileForUser(data.user.id, displayName);
-        await finalizeProfile(data.user.id);
-      }
-      nextStep();
+      await signInWithGoogle();
     } catch (e: any) {
       if (e.message?.includes('cancelled')) return;
       Alert.alert('Google Sign Up Failed', e.message ?? 'Please try again.');

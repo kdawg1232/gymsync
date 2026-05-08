@@ -18,7 +18,7 @@ export function Step12({ nextStep }: Props) {
     if (!profile?.invite_code) return;
     try {
       await Share.share({
-        message: `Join me on GymSync! Use my invite code: ${profile.invite_code}\n\nDownload: https://gymsync.app`,
+        message: `Join me on GymSync! Use my invite code: ${profile.invite_code}\n\nDownload: https://thegymsyncapp.netlify.app`,
       });
     } catch (_) {}
   };

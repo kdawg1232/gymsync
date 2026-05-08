@@ -86,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPartnerProfile(null);
       }
     } catch (e) {
-      console.error('Error fetching profile:', e);
+      if (__DEV__) console.error('Error fetching profile:', e);
     } finally {
       setProfileLoading(false);
     }
@@ -98,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const p = await getActivePact(user.id);
       setPact(p);
     } catch (e) {
-      console.error('Error fetching pact:', e);
+      if (__DEV__) console.error('Error fetching pact:', e);
     }
   }, [user]);
 
@@ -108,7 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const entries = await getWagerLedger(user.id);
       setWagerLedger(entries);
     } catch (e) {
-      console.error('Error fetching wager ledger:', e);
+      if (__DEV__) console.error('Error fetching wager ledger:', e);
     }
   }, [user]);
 

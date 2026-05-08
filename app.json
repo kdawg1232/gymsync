@@ -33,9 +33,7 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.kdigavalli.gymsync",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": []
     },
     "plugins": [
       "expo-router",
@@ -65,7 +63,8 @@
       ],
       "expo-secure-store",
       "expo-apple-authentication",
-      "./plugins/widget/withWidget"
+      "./plugins/widget/withWidget",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

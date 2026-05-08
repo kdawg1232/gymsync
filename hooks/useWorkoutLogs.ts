@@ -28,7 +28,7 @@ export function useWorkoutLogs(
       });
       setLogs(data);
     } catch (e) {
-      console.error('Error fetching workout logs:', e);
+      if (__DEV__) console.error('Error fetching workout logs:', e);
     } finally {
       setLoading(false);
     }
@@ -37,9 +37,12 @@ export function useWorkoutLogs(
   fetchRef.current = fetchLogs;
 
   useEffect(() => {
-    fetchRef.current?.();
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-    if (!userId) return;
+    fetchRef.current?.();
 
     const id = ++channelCounter;
     const channel = supabase

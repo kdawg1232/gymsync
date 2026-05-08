@@ -22,7 +22,7 @@ export function Step13({ onComplete }: Props) {
         await scheduleWeeklySummary();
       }
     } catch (e) {
-      console.warn('Notification setup error:', e);
+      if (__DEV__) console.warn('Notification setup error:', e);
     } finally {
       setEnabling(false);
       onComplete();

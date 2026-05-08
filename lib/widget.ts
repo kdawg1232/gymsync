@@ -22,7 +22,7 @@ export async function updateWidgetData(data: WidgetData): Promise<void> {
   try {
     await SharedGroupPreferences.setItem('widget_data', data, APP_GROUP);
   } catch (e) {
-    console.warn('Failed to update widget data:', e);
+    if (__DEV__) console.warn('Failed to update widget data:', e);
   }
 }
 
@@ -44,6 +44,6 @@ export async function clearWidgetData(): Promise<void> {
     };
     await SharedGroupPreferences.setItem('widget_data', empty, APP_GROUP);
   } catch (e) {
-    console.warn('Failed to clear widget data:', e);
+    if (__DEV__) console.warn('Failed to clear widget data:', e);
   }
 }

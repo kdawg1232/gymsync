@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, TextInput, Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, Pressable, TextInput, Image, Alert, ActivityIndicator, ScrollView, Keyboard } from 'react-native';
 import { Camera, RefreshCw } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '@/context/AppContext';
@@ -105,7 +105,7 @@ export default function LogScreen() {
   const hasExistingPhoto = !!existingLog?.image_url;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: BG_COLORS[mood] }}>
+    <Pressable className="flex-1" style={{ backgroundColor: BG_COLORS[mood] }} onPress={Keyboard.dismiss}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 140 }}
@@ -215,6 +215,6 @@ export default function LogScreen() {
           </Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }

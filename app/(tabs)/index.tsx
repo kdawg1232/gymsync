@@ -57,11 +57,13 @@ export default function HomeScreen() {
   const [streak, setStreak] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  const now = new Date();
-  const weekInterval = {
-    start: startOfWeek(now, { weekStartsOn: 1 }),
-    end: endOfWeek(now, { weekStartsOn: 1 }),
-  };
+  const weekInterval = useMemo(() => {
+    const now = new Date();
+    return {
+      start: startOfWeek(now, { weekStartsOn: 1 }),
+      end: endOfWeek(now, { weekStartsOn: 1 }),
+    };
+  }, []);
 
   const { myCount, partnerCount } = useMemo(() => {
     const myDays = new Set<string>();
@@ -171,7 +173,7 @@ export default function HomeScreen() {
               <MotiView
                 from={{ width: '0%' }}
                 animate={{
-                  width: `${Math.min((partnerCount / goal) * 100, 100)}%`,
+                  width: `${Math.min((partnerCount / Math.max(goal, 1)) * 100, 100)}%`,
                 }}
                 transition={{ type: 'timing', duration: 800 }}
                 className="bg-black h-full rounded-full"
@@ -228,7 +230,7 @@ export default function HomeScreen() {
             <MotiView
               from={{ width: '0%' }}
               animate={{
-                width: `${Math.min((myCount / goal) * 100, 100)}%`,
+                width: `${Math.min((myCount / Math.max(goal, 1)) * 100, 100)}%`,
               }}
               transition={{ type: 'timing', duration: 800 }}
               className="bg-black h-full rounded-full"
