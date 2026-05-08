@@ -52,7 +52,7 @@ function PhotoDayGrid({ logs, userId, accentColor }: {
 }
 
 export default function HomeScreen() {
-  const { user, profile, partnerProfile, pact, goal, wager, myDebt, partnerName } = useApp();
+  const { user, profile, partnerProfile, pact, goal, wager, partnerName } = useApp();
   const { logs, refetch, loading } = useWorkoutLogs(user?.id, partnerProfile?.id);
   const [streak, setStreak] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -245,20 +245,13 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Wager Card */}
-        <View className="bg-[#1A1A1A] border border-white/10 rounded-[32px] p-6">
-          <View className="flex-row gap-2 items-center mb-1">
-            <Dumbbell size={20} color={Colors.pastelPink} />
-            <Text className="font-bold text-sm uppercase tracking-wider text-pastel-pink">
-              The Stakes
-            </Text>
-          </View>
-          <Text className="text-xl font-medium text-white mt-2">{wager}</Text>
-          <Text className="text-white/40 text-sm mt-2">
-            {myDebt > 0
-              ? `You owe ${partnerName}: ${myDebt}`
-              : 'All clear — keep it up!'}
+        {/* The Stakes */}
+        <View className="items-center py-6">
+          <Dumbbell size={28} color={Colors.pastelPink} style={{ marginBottom: 8 }} />
+          <Text className="font-bold text-sm uppercase tracking-widest text-pastel-pink mb-2">
+            The Stakes
           </Text>
+          <Text className="text-xl font-medium text-white">{wager}</Text>
         </View>
       </MotiView>
     </ScrollView>

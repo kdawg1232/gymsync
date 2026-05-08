@@ -8,9 +8,9 @@ import React, {
 } from 'react';
 import { type Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { getProfile, getActivePact } from '@/lib/database';
+import { getProfile, getActivePact, getWagerLedger } from '@/lib/database';
 import { clearWidgetData } from '@/lib/widget';
-import type { Profile, Pact } from '@/types';
+import type { Profile, Pact, WagerLedgerEntry } from '@/types';
 
 interface AppState {
   // Auth
@@ -25,6 +25,9 @@ interface AppState {
 
   // Pact
   pact: Pact | null;
+
+  // Wager ledger
+  wagerLedger: WagerLedgerEntry[];
 
   // Convenience getters
   goal: number;
@@ -46,6 +49,7 @@ interface AppState {
   // Refresh functions
   refreshProfile: () => Promise<void>;
   refreshPact: () => Promise<void>;
+  refreshLedger: () => Promise<void>;
 
   // Sign out
   handleSignOut: () => Promise<void>;
@@ -60,6 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<Profile | null>(null);
   const [pact, setPact] = useState<Pact | null>(null);
+  const [wagerLedger, setWagerLedger] = useState<WagerLedgerEntry[]>([]);
 
   // Onboarding local state
   const [onboardingGoal, setOnboardingGoal] = useState(3);
@@ -97,6 +102,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  const refreshLedger = useCallback(async () => {
+    if (!user) return;
+    try {
+      const entries = await getWagerLedger(user.id);
+      setWagerLedger(entries);
+    } catch (e) {
+      console.error('Error fetching wager ledger:', e);
+    }
+  }, [user]);
+
   // Listen for auth changes
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -113,18 +128,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load profile & pact when user changes
+  // Load profile, pact & ledger when user changes
   useEffect(() => {
     if (user) {
       refreshProfile();
       refreshPact();
+      refreshLedger();
     } else {
       setProfile(null);
       setPartnerProfile(null);
       setPact(null);
+      setWagerLedger([]);
       setProfileLoading(false);
     }
-  }, [user, refreshProfile, refreshPact]);
+  }, [user, refreshProfile, refreshPact, refreshLedger]);
 
   // Realtime subscriptions
   useEffect(() => {
@@ -142,14 +159,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'pacts' },
         () => refreshPact(),
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'wager_ledger' },
+        () => refreshLedger(),
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshProfile, refreshPact]);
-
-  const isUser1 = pact ? pact.user1_id === user?.id : true;
+  }, [user, refreshProfile, refreshPact, refreshLedger]);
 
   // Widget data is synced from the Home screen where workout counts are available
 
@@ -158,6 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setPartnerProfile(null);
     setPact(null);
+    setWagerLedger([]);
     setOnboardingGoal(3);
     setOnboardingWager('1 Coffee');
     setOnboardingName('');
@@ -175,10 +196,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         profile,
         partnerProfile,
         pact,
+        wagerLedger,
         goal: pact?.goal ?? onboardingGoal,
         wager: pact?.wager ?? onboardingWager,
-        myDebt: pact ? (isUser1 ? pact.user1_debt : pact.user2_debt) : 0,
-        partnerDebt: pact ? (isUser1 ? pact.user2_debt : pact.user1_debt) : 0,
+        myDebt: wagerLedger.filter(
+          (e) => e.debtor_id === user?.id && (e.status === 'pending' || e.status === 'deferred'),
+        ).length,
+        partnerDebt: wagerLedger.filter(
+          (e) => e.creditor_id === user?.id && (e.status === 'pending' || e.status === 'deferred'),
+        ).length,
         partnerName: partnerProfile?.name ?? 'Partner',
         onboardingGoal,
         setOnboardingGoal,
@@ -190,6 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOnboardingAvatarUri,
         refreshProfile,
         refreshPact,
+        refreshLedger,
         handleSignOut,
       }}
     >

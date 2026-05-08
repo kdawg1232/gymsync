@@ -16,7 +16,7 @@ import { SettingsMenuItem } from '@/components/ui/SettingsMenuItem';
 import { SettingsToggle } from '@/components/ui/SettingsToggle';
 import { Colors } from '@/constants/colors';
 import {
-  getProfileByInviteCode, pairPartner, updatePact, unpairPartners,
+  getProfileByInviteCode, pairPartner, unpairPartners,
   updateProfile, getNotificationPrefs, updateNotificationPrefs,
   clearMyData, deleteMyAccount,
 } from '@/lib/database';
@@ -34,7 +34,7 @@ const GYMSYNC_WEB_BASE = 'https://thegymsyncapp.netlify.app';
 export default function ProfileScreen() {
   const {
     user, profile, partnerProfile, pact,
-    wager, myDebt, partnerDebt, partnerName, goal,
+    wager, partnerName, goal,
     refreshProfile, refreshPact, handleSignOut,
   } = useApp();
 
@@ -53,38 +53,12 @@ export default function ProfileScreen() {
   const [clearingData, setClearingData] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
-  const isUser1 = pact ? pact.user1_id === user?.id : true;
-
   // Load notification preferences when settings open
   useEffect(() => {
     if (showSettings && user) {
       getNotificationPrefs(user.id).then(setNotifPrefs).catch(() => {});
     }
   }, [showSettings, user]);
-
-  const resolveMyDebt = async () => {
-    if (!pact || myDebt <= 0) return;
-    try {
-      await updatePact(pact.id, {
-        [isUser1 ? 'user1_debt' : 'user2_debt']: myDebt - 1,
-      });
-      await refreshPact();
-    } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Could not update debt.');
-    }
-  };
-
-  const clearPartnerDebt = async () => {
-    if (!pact || partnerDebt <= 0) return;
-    try {
-      await updatePact(pact.id, {
-        [isUser1 ? 'user2_debt' : 'user1_debt']: partnerDebt - 1,
-      });
-      await refreshPact();
-    } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Could not update debt.');
-    }
-  };
 
   const copyInviteCode = async () => {
     if (!profile?.invite_code) return;
@@ -324,49 +298,6 @@ export default function ProfileScreen() {
             >
               <Settings size={24} color="#fff" />
             </Pressable>
-          </View>
-
-          {/* Wager Balances */}
-          <View className="gap-4 mb-8">
-            <Text className="text-sm font-bold uppercase tracking-widest text-white/50">
-              Wager Balances
-            </Text>
-
-            <View className="bg-[#1A1A1A] p-5 rounded-3xl flex-row justify-between items-center border-l-4 border-pastel-pink">
-              <View>
-                <Text className="text-white/60 text-sm font-medium mb-1">You owe {partnerName}</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-3xl font-black text-pastel-pink">{myDebt}</Text>
-                  <Text className="text-sm font-bold text-white/80">{wager}</Text>
-                </View>
-              </View>
-              {myDebt > 0 && (
-                <Pressable
-                  onPress={resolveMyDebt}
-                  className="bg-pastel-pink/10 px-4 py-3 rounded-xl active:opacity-80"
-                >
-                  <Text className="text-pastel-pink font-bold">Resolve 1</Text>
-                </Pressable>
-              )}
-            </View>
-
-            <View className="bg-[#1A1A1A] p-5 rounded-3xl flex-row justify-between items-center border-l-4 border-pastel-green">
-              <View>
-                <Text className="text-white/60 text-sm font-medium mb-1">{partnerName} owes you</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-3xl font-black text-pastel-green">{partnerDebt}</Text>
-                  <Text className="text-sm font-bold text-white/80">{wager}</Text>
-                </View>
-              </View>
-              {partnerDebt > 0 && (
-                <Pressable
-                  onPress={clearPartnerDebt}
-                  className="bg-pastel-green/10 px-4 py-3 rounded-xl active:opacity-80"
-                >
-                  <Text className="text-pastel-green font-bold">Clear 1</Text>
-                </Pressable>
-              )}
-            </View>
           </View>
 
           {/* Partner Info Card (shown when connected) */}

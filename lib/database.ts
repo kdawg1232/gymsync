@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { supabase } from './supabase';
-import type { Profile, Pact, WorkoutLog, NotificationPreference } from '@/types';
+import type { Profile, Pact, WorkoutLog, NotificationPreference, WagerLedgerEntry, WagerStatus } from '@/types';
 
 // ── Profiles ──
 
@@ -257,6 +257,73 @@ export async function getWeeklyStreak(userId: string, goal: number): Promise<num
   }
 
   return streak;
+}
+
+// ── Wager Ledger ──
+
+export async function getWagerLedger(
+  userId: string,
+  statuses: WagerStatus[] = ['pending', 'deferred'],
+): Promise<WagerLedgerEntry[]> {
+  const { data, error } = await supabase
+    .from('wager_ledger')
+    .select('*')
+    .or(`debtor_id.eq.${userId},creditor_id.eq.${userId}`)
+    .in('status', statuses)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getWagerHistory(
+  userId: string,
+  limit = 20,
+): Promise<WagerLedgerEntry[]> {
+  const { data, error } = await supabase
+    .from('wager_ledger')
+    .select('*')
+    .or(`debtor_id.eq.${userId},creditor_id.eq.${userId}`)
+    .eq('status', 'completed')
+    .order('resolved_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createWagerEntry(entry: {
+  pact_id: string;
+  debtor_id: string;
+  creditor_id: string;
+  penalty_text: string;
+  week_start: string;
+}): Promise<WagerLedgerEntry> {
+  const { data, error } = await supabase
+    .from('wager_ledger')
+    .insert(entry)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWagerStatus(
+  entryId: string,
+  status: WagerStatus,
+  resolvedBy: string,
+) {
+  const updates: Record<string, unknown> = { status, resolved_by: resolvedBy };
+  if (status === 'completed' || status === 'deferred') {
+    updates.resolved_at = new Date().toISOString();
+  }
+  if (status === 'pending') {
+    updates.resolved_at = null;
+    updates.resolved_by = null;
+  }
+  const { error } = await supabase
+    .from('wager_ledger')
+    .update(updates)
+    .eq('id', entryId);
+  if (error) throw error;
 }
 
 // ── Notification Preferences ──

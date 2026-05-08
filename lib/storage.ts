@@ -47,7 +47,11 @@ async function uploadFile(
 
 export async function uploadAvatar(userId: string, uri: string): Promise<string> {
   const compressed = await compressImage(uri, 400, 0.6);
-  return uploadFile('avatars', `${userId}/avatar`, compressed);
+  const publicUrl = await uploadFile('avatars', `${userId}/avatar`, compressed);
+  // Same storage path every time → same URL string; RN Image caches by URI and keeps the old bitmap.
+  // Append a version so clients treat each upload as a new resource while still hitting the same object.
+  const sep = publicUrl.includes('?') ? '&' : '?';
+  return `${publicUrl}${sep}v=${Date.now()}`;
 }
 
 export async function uploadWorkoutPhoto(

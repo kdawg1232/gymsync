@@ -37,6 +37,21 @@ export interface WorkoutLog {
   user_avatar?: string | null;
 }
 
+export type WagerStatus = 'pending' | 'completed' | 'deferred';
+
+export interface WagerLedgerEntry {
+  id: string;
+  pact_id: string;
+  debtor_id: string;
+  creditor_id: string;
+  penalty_text: string;
+  week_start: string;
+  status: WagerStatus;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+}
+
 export interface NotificationPreference {
   user_id: string;
   workout_reminders: boolean;
