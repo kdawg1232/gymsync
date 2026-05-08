@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="GymSync — log workouts, capture moments, stay consistent. Your training, synced and private."
+    />
+    <title>GymSync — Log workouts. Stay in sync.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true"></div>
+    <header>
+      <div class="nav-inner">
+        <a class="brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true">G</span>
+          GymSync
+        </a>
+        <nav aria-label="Main">
+          <ul>
+            <li><a href="index.html" aria-current="page">Home</a></li>
+            <li><a href="support.html">Support</a></li>
+            <li><a href="privacy.html">Privacy</a></li>
+            <li><a href="terms.html">Terms</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section class="hero">
+        <div class="pill-row">
+          <span class="pill accent">Workout logging</span>
+          <span class="pill">Training history</span>
+          <span class="pill">Photos optional</span>
+        </div>
+        <h1>Log workouts. Stay in sync with yourself.</h1>
+        <p class="lede">
+          GymSync is a focused place to record sessions, mood, and progress — with optional
+          photos when you want the memory, not the performance theater.
+        </p>
+      </section>
+
+      <p class="section-title">Why GymSync</p>
+      <div class="card-grid">
+        <article class="card">
+          <h2><span class="dot orange"></span> Quick logging</h2>
+          <p>
+            Capture what you did, how it felt, and move on. Built for gym floors, not spreadsheets.
+          </p>
+        </article>
+        <article class="card">
+          <h2><span class="dot purple"></span> Your history</h2>
+          <p>
+            Scroll back through sessions to spot patterns, streaks, and the days you showed up.
+          </p>
+        </article>
+        <article class="card">
+          <h2><span class="dot mint"></span> Optional photos</h2>
+          <p>
+            Add workout photos when you want a visual log. You control the camera and library access.
+          </p>
+        </article>
+        <article class="card">
+          <h2><span class="dot pink"></span> Account &amp; cloud sync</h2>
+          <p>
+            Sign in to keep data backed up and available across devices. See our Privacy Policy for
+            how we handle information.
+          </p>
+        </article>
+      </div>
+
+      <p class="section-title">Get the app</p>
+      <div class="card">
+        <h2 style="margin-top: 0">GymSync on mobile</h2>
+        <p style="margin-bottom: 0">
+          Download from the App Store when you’re ready. This site is a simple home for policies and
+          support — the full experience lives in the app.
+        </p>
+      </div>
+    </main>
+    <footer>
+      <span>© <span id="y"></span> GymSync. All rights reserved.</span>
+      <span>
+        <a href="privacy.html">Privacy</a>
+        ·
+        <a href="terms.html">Terms</a>
+        ·
+        <a href="support.html">Support</a>
+      </span>
+    </footer>
+    <script>
+      document.getElementById("y").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
