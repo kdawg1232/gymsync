@@ -13,7 +13,7 @@ const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function HistoryScreen() {
   const { user, partnerProfile, partnerName, profile } = useApp();
-  const { logs, refetch, loading } = useWorkoutLogs(user?.id, partnerProfile?.id);
+  const { logs, refetch, loading } = useWorkoutLogs(user?.id, partnerProfile?.id, { limit: 14 });
   const [refreshing, setRefreshing] = useState(false);
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -48,7 +48,7 @@ export default function HistoryScreen() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="p-6 pt-14 pb-32"
+      contentContainerClassName="p-6 pt-20 pb-32"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
       }
@@ -135,7 +135,7 @@ export default function HistoryScreen() {
           </View>
         )}
 
-        {/* Workout Grid */}
+        {/* Workout Grid - Last 7 days */}
         <View className="flex-row flex-wrap gap-3 pb-8">
           {sortedLogs.map((log) => {
             const isMe = log.user_id === user?.id;
@@ -150,11 +150,19 @@ export default function HistoryScreen() {
                   <Image
                     source={{ uri: log.image_url }}
                     className="w-full h-full absolute"
-                    style={{ resizeMode: 'cover' }}
+                    resizeMode="cover"
                   />
-                ) : null}
-                <View className="absolute inset-0 bg-black/40" />
-                <View className="absolute bottom-0 left-0 right-0 h-1/2 bg-black/60" />
+                ) : (
+                  <View className="w-full h-full absolute bg-[#1A1A1A] items-center justify-center">
+                    <FaceIcon
+                      mood={log.mood}
+                      size={48}
+                      color="rgba(255,255,255,0.15)"
+                    />
+                  </View>
+                )}
+                <View className="absolute inset-0 bg-black/30" />
+                <View className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
 
                 <View className="absolute bottom-3 left-3 right-3">
                   <Text className="text-white font-bold leading-none">{displayName}</Text>

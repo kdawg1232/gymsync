@@ -56,7 +56,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="p-6 pb-32"
+      contentContainerClassName="p-6 pt-16 pb-32"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
       }
@@ -65,7 +65,7 @@ export default function HomeScreen() {
         from={{ opacity: 0, translateY: 20 }}
         animate={{ opacity: 1, translateY: 0 }}
       >
-        <View className="pt-8 mb-8">
+        <View className="pt-4 mb-8">
           <Text className="text-4xl font-bold text-white tracking-tight mb-2">
             Hey{profile?.name ? `, ${profile.name}` : ''}.
           </Text>

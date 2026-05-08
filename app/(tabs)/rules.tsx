@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable, TextInput, Alert } from 'react-native';
 import { MotiView } from 'moti';
-import { Settings, Target, Flame, Coffee } from 'lucide-react-native';
+import { Settings, Coffee } from 'lucide-react-native';
 import { useApp } from '@/context/AppContext';
 import { updatePact } from '@/lib/database';
 import { Colors } from '@/constants/colors';
@@ -44,7 +44,7 @@ export default function RulesScreen() {
     <MotiView
       from={{ opacity: 0, translateY: 10 }}
       animate={{ opacity: 1, translateY: 0 }}
-      className="flex-1 p-6 pt-14"
+      className="flex-1 p-6 pt-20"
     >
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-3xl font-bold text-pastel-pink">Weekly Rules</Text>
@@ -65,11 +65,7 @@ export default function RulesScreen() {
       </Text>
 
       {/* Target Card */}
-      <View className="bg-[#1A1A1A] p-6 rounded-[32px] border border-white/5 mb-6 overflow-hidden">
-        <View className="absolute top-0 right-0 p-6 opacity-10">
-          <Target size={120} color="#fff" />
-        </View>
-
+      <View className="bg-[#1A1A1A] p-6 rounded-[32px] border border-white/5 mb-6 min-h-[200px] justify-center">
         <Text className="text-sm font-bold uppercase tracking-widest text-[#ffdfba] mb-6">
           The Minimum
         </Text>
@@ -102,11 +98,7 @@ export default function RulesScreen() {
       </View>
 
       {/* Wager Card */}
-      <View className="bg-[#1A1A1A] p-6 rounded-[32px] border border-[#ff8c00]/20 overflow-hidden">
-        <View className="absolute -bottom-4 -right-4 p-6 opacity-10">
-          <Flame size={140} color="#fff" />
-        </View>
-
+      <View className="bg-[#1A1A1A] p-6 rounded-[32px] border border-[#ff8c00]/20 min-h-[200px] justify-center">
         <Text className="text-sm font-bold uppercase tracking-widest text-[#ff8c00] mb-6">
           The Penalty
         </Text>

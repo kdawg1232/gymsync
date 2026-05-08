@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, Pressable, TextInput, ScrollView, Alert,
-  Image, Linking, ActivityIndicator, KeyboardAvoidingView, Platform,
+  Image, Linking, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { MotiView } from 'moti';
 import {
   Settings, X, Shield, FileText, Check, HelpCircle,
   Bell, BellOff, Clock, Smartphone, User as UserIcon,
-  Camera, KeyRound, ChevronRight, Trash2,
+  Camera, KeyRound, Trash2,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -205,32 +205,15 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1">
-      <ScrollView className="flex-1" contentContainerClassName="p-6 pt-14 pb-32">
+      <ScrollView className="flex-1" contentContainerClassName="p-6 pt-20 pb-32">
         <MotiView
           from={{ opacity: 0, translateY: -20 }}
           animate={{ opacity: 1, translateY: 0 }}
         >
           <View className="flex-row justify-between items-center mb-8">
-            <View className="flex-row items-center gap-4">
-              <Pressable onPress={changeAvatar}>
-                {changingAvatar ? (
-                  <View className="w-12 h-12 rounded-full bg-white/10 items-center justify-center">
-                    <ActivityIndicator color="#fff" size="small" />
-                  </View>
-                ) : profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} className="w-12 h-12 rounded-full" />
-                ) : (
-                  <View className="w-12 h-12 rounded-full bg-pastel-green/20 items-center justify-center">
-                    <UserIcon size={24} color={Colors.pastelGreen} />
-                  </View>
-                )}
-              </Pressable>
-              <View>
-                <Text className="text-3xl font-bold text-pastel-green">
-                  {profile?.name ?? 'Profile'}
-                </Text>
-              </View>
-            </View>
+            <Text className="text-3xl font-bold text-pastel-green">
+              {profile?.name ?? 'Profile'}
+            </Text>
             <Pressable
               onPress={() => setShowSettings(true)}
               className="p-2 bg-white/10 rounded-full active:opacity-80"
@@ -282,30 +265,40 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* Partner Sync */}
-          <View className="gap-4 pt-4 pb-12">
-            <Text className="text-sm font-bold uppercase tracking-widest text-white/50">
-              Partner Sync
-            </Text>
-            <View className="bg-[#1A1A1A] border border-white/10 p-6 rounded-[32px] gap-6">
-              {partnerProfile ? (
+          {/* Partner Info Card (shown when connected) */}
+          {partnerProfile && (
+            <View className="gap-4 mb-8">
+              <Text className="text-sm font-bold uppercase tracking-widest text-white/50">
+                Your Partner
+              </Text>
+              <View className="bg-[#1A1A1A] border border-white/10 p-6 rounded-[32px]">
                 <View className="flex-row items-center gap-4">
                   {partnerProfile.avatar_url ? (
-                    <Image source={{ uri: partnerProfile.avatar_url }} className="w-12 h-12 rounded-full" />
+                    <Image source={{ uri: partnerProfile.avatar_url }} className="w-14 h-14 rounded-full" />
                   ) : (
-                    <View className="w-12 h-12 rounded-full bg-pastel-purple/20 items-center justify-center">
-                      <UserIcon size={20} color={Colors.pastelPurple} />
+                    <View className="w-14 h-14 rounded-full bg-pastel-purple/20 items-center justify-center">
+                      <UserIcon size={24} color={Colors.pastelPurple} />
                     </View>
                   )}
                   <View className="flex-1">
                     <Text className="font-bold text-white text-lg">{partnerProfile.name}</Text>
                     <Text className="text-white/40 text-sm">Paired & Active</Text>
                   </View>
-                  <View className="bg-pastel-green/20 px-3 py-1 rounded-full">
+                  <View className="bg-pastel-green/20 px-3 py-1.5 rounded-full">
                     <Text className="text-pastel-green text-xs font-bold">Connected</Text>
                   </View>
                 </View>
-              ) : (
+              </View>
+            </View>
+          )}
+
+          {/* Partner Sync */}
+          <View className="gap-4 pt-4 pb-12">
+            <Text className="text-sm font-bold uppercase tracking-widest text-white/50">
+              Partner Sync
+            </Text>
+            <View className="bg-[#1A1A1A] border border-white/10 p-6 rounded-[32px] gap-6">
+              {!partnerProfile && (
                 <View>
                   <Text className="font-bold text-white/80 mb-3">Sync a new partner</Text>
                   <View className="flex-row gap-2">
@@ -331,7 +324,7 @@ export default function ProfileScreen() {
                 </View>
               )}
 
-              <View className="pt-6 border-t border-white/10">
+              <View className={!partnerProfile ? "pt-6 border-t border-white/10" : ""}>
                 <Text className="text-sm text-white/50 mb-2 font-medium">Your Invite Code</Text>
                 <View className="flex-row items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">
                   <Text className="text-2xl font-black tracking-widest text-pastel-yellow">

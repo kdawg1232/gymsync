@@ -72,7 +72,8 @@ struct GymSyncProvider: TimelineProvider {
 
         guard let data = jsonStr.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return placeholder(in: .init(family: .systemSmall, isPreview: false))
+            return GymSyncEntry(date: Date(), myCount: 0, partnerCount: 0, goal: 5,
+                                myName: "You", partnerName: "Partner", daysLeft: 0, streak: 0)
         }
 
         return GymSyncEntry(
@@ -352,8 +353,9 @@ struct GymSyncWidget: Widget {
          cfg.buildSettings.PRODUCT_NAME === `"${WIDGET_TARGET}"`)
       ) {
         cfg.buildSettings.SWIFT_VERSION = '5.0';
-        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = '15.1';
+        cfg.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = '17.0';
         cfg.buildSettings.TARGETED_DEVICE_FAMILY = '"1"';
+        cfg.buildSettings.INFOPLIST_FILE = `"${WIDGET_TARGET}/Info.plist"`;
         cfg.buildSettings.CODE_SIGN_ENTITLEMENTS =
           `"${WIDGET_TARGET}/${WIDGET_TARGET}.entitlements"`;
       }

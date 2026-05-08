@@ -1,8 +1,7 @@
 import { Tabs } from 'expo-router';
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
 import { Home, Target, Camera, Activity, User } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { BlurView } from 'expo-blur';
 
 export default function TabLayout() {
   return (
@@ -21,9 +20,16 @@ export default function TabLayout() {
           borderTopWidth: 0,
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.2)',
-          paddingHorizontal: 24,
+          paddingHorizontal: 10,
+          paddingTop: 15,
+          paddingBottom: 0,
           elevation: 0,
           shadowOpacity: 0,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 72,
         },
         sceneStyle: {
           backgroundColor: '#0A0A0A',
@@ -61,8 +67,9 @@ export default function TabLayout() {
         options={{
           tabBarIcon: () => (
             <View
-              className="bg-pastel-orange rounded-full p-4 -mt-10"
+              className="bg-pastel-orange rounded-full p-4"
               style={{
+                marginTop: -5,
                 shadowColor: Colors.pastelOrange,
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.4,
