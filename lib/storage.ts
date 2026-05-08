@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { File as ExpoFile } from 'expo-file-system';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 async function compressImage(uri: string, maxWidth = 800, quality = 0.5): Promise<string> {
@@ -19,8 +20,13 @@ async function uploadFile(
   path: string,
   uri: string,
 ): Promise<string> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  // React Native `fetch(file://...)` often returns an empty body; `blob()` then uploads 0 bytes.
+  // Read bytes via the native file module instead.
+  const expoFile = new ExpoFile(uri);
+  const arrayBuffer = await expoFile.arrayBuffer();
+  if (arrayBuffer.byteLength === 0) {
+    throw new Error('Could not read image data from the device.');
+  }
 
   const ext = uri.includes('.png') ? 'png' : 'jpg';
   const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
@@ -28,7 +34,7 @@ async function uploadFile(
 
   const { error } = await supabase.storage
     .from(bucket)
-    .upload(filePath, blob, {
+    .upload(filePath, arrayBuffer, {
       contentType,
       upsert: true,
     });

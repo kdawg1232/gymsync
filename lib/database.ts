@@ -1,3 +1,4 @@
+import { format, parseISO } from 'date-fns';
 import { supabase } from './supabase';
 import type { Profile, Pact, WorkoutLog, NotificationPreference } from '@/types';
 
@@ -21,6 +22,16 @@ export async function updateProfile(
     .from('profiles')
     .update(updates)
     .eq('id', userId);
+  if (error) throw error;
+}
+
+export async function clearMyData() {
+  const { error } = await supabase.rpc('clear_user_data');
+  if (error) throw error;
+}
+
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc('delete_user_account');
   if (error) throw error;
 }
 
@@ -118,7 +129,7 @@ export async function addWorkoutLog(log: {
 export async function getWorkoutLogs(
   userId: string,
   partnerId: string | null,
-  options?: { weekStart?: string; limit?: number },
+  options?: { weekStart?: string; limit?: number; from?: string; to?: string },
 ): Promise<WorkoutLog[]> {
   let query = supabase
     .from('workout_logs')
@@ -131,6 +142,12 @@ export async function getWorkoutLogs(
 
   if (options?.weekStart) {
     query = query.gte('logged_at', options.weekStart);
+  }
+  if (options?.from) {
+    query = query.gte('logged_at', options.from);
+  }
+  if (options?.to) {
+    query = query.lt('logged_at', options.to);
   }
   if (options?.limit) {
     query = query.limit(options.limit);
@@ -196,7 +213,7 @@ export async function updateWorkoutLog(
 export async function getWeeklyStreak(userId: string, goal: number): Promise<number> {
   const { data, error } = await supabase
     .from('workout_logs')
-    .select('logged_at')
+    .select('logged_at, image_url')
     .eq('user_id', userId)
     .order('logged_at', { ascending: false });
 
@@ -220,12 +237,17 @@ export async function getWeeklyStreak(userId: string, goal: number): Promise<num
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
-    const logsInWeek = data.filter((l) => {
-      const d = new Date(l.logged_at);
-      return d >= weekStart && d < weekEnd;
-    });
+    const photoDaysInWeek = new Set(
+      data
+        .filter((l) => {
+          if (!l.image_url) return false;
+          const d = parseISO(l.logged_at);
+          return d >= weekStart && d < weekEnd;
+        })
+        .map((l) => format(parseISO(l.logged_at), 'yyyy-MM-dd')),
+    );
 
-    if (logsInWeek.length >= goal) {
+    if (photoDaysInWeek.size >= goal) {
       streak++;
       weekStart = new Date(weekStart);
       weekStart.setDate(weekStart.getDate() - 7);

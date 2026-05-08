@@ -13,7 +13,7 @@ export function useWorkoutLogs(
 ) {
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchRef = useRef<() => Promise<void>>();
+  const fetchRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   const fetchLogs = useCallback(async () => {
     if (!userId) return;
@@ -47,6 +47,16 @@ export function useWorkoutLogs(
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'workout_logs' },
+        (payload) => {
+          const row = payload.new as WorkoutLog;
+          if (row.user_id === userId || row.user_id === partnerId) {
+            fetchRef.current?.();
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'workout_logs' },
         (payload) => {
           const row = payload.new as WorkoutLog;
           if (row.user_id === userId || row.user_id === partnerId) {

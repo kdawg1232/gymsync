@@ -18,6 +18,7 @@ import { Colors } from '@/constants/colors';
 import {
   getProfileByInviteCode, pairPartner, updatePact, unpairPartners,
   updateProfile, getNotificationPrefs, updateNotificationPrefs,
+  clearMyData, deleteMyAccount,
 } from '@/lib/database';
 import { uploadAvatar } from '@/lib/storage';
 import {
@@ -25,6 +26,7 @@ import {
   cancelAllNotifications, registerForPushNotifications,
 } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
+import { clearWidgetData } from '@/lib/widget';
 import type { NotificationPreference } from '@/types';
 
 const GYMSYNC_WEB_BASE = 'https://thegymsyncapp.netlify.app';
@@ -48,6 +50,8 @@ export default function ProfileScreen() {
   const [newName, setNewName] = useState('');
   const [savingName, setSavingName] = useState(false);
   const [changingAvatar, setChangingAvatar] = useState(false);
+  const [clearingData, setClearingData] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const isUser1 = pact ? pact.user1_id === user?.id : true;
 
@@ -226,6 +230,66 @@ export default function ProfileScreen() {
         }
       },
       'secure-text',
+    );
+  };
+
+  const confirmClearData = () => {
+    if (!user) return;
+    Alert.alert(
+      'Delete your app data?',
+      'This deletes your workout logs, photos, avatar, partner link, and active pact data. Notification settings reset to defaults. Your account stays active.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Data',
+          style: 'destructive',
+          onPress: async () => {
+            setClearingData(true);
+            try {
+              await clearMyData();
+              await cancelAllNotifications();
+              await clearWidgetData();
+              await refreshProfile();
+              await refreshPact();
+              setNotifPrefs(await getNotificationPrefs(user.id));
+              Alert.alert('Data Deleted', 'Your stored app data has been removed.');
+            } catch (e: any) {
+              Alert.alert('Error', e.message ?? 'Could not delete your data.');
+            } finally {
+              setClearingData(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const confirmDeleteAccount = () => {
+    if (!user) return;
+    Alert.alert(
+      'Delete your account?',
+      'This permanently deletes your account and all GymSync data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+            try {
+              await deleteMyAccount();
+              await cancelAllNotifications();
+              await clearWidgetData();
+              setShowSettings(false);
+              await handleSignOut();
+            } catch (e: any) {
+              Alert.alert('Error', e.message ?? 'Could not delete your account.');
+            } finally {
+              setDeletingAccount(false);
+            }
+          },
+        },
+      ],
     );
   };
 
@@ -556,6 +620,39 @@ export default function ProfileScreen() {
                     label="Support"
                     onPress={() => Linking.openURL(`${GYMSYNC_WEB_BASE}/support`)}
                   />
+                </View>
+
+                {/* Danger Zone */}
+                <Text className="text-sm font-bold uppercase tracking-widest text-red-500/60 mt-8 mb-3">
+                  Danger Zone
+                </Text>
+                <View className="gap-3">
+                  <Pressable
+                    onPress={clearingData ? undefined : confirmClearData}
+                    disabled={clearingData || deletingAccount}
+                    className="w-full flex-row items-center justify-between p-5 bg-red-500/10 rounded-3xl active:scale-95 disabled:opacity-50"
+                    style={{ transform: [{ scale: 1 }] }}
+                  >
+                    <View className="flex-row items-center gap-4">
+                      <Trash2 size={24} color={Colors.pastelRed} />
+                      <Text className="font-bold text-lg text-red-400">
+                        {clearingData ? 'Deleting Data...' : 'Delete All Data'}
+                      </Text>
+                    </View>
+                  </Pressable>
+                  <Pressable
+                    onPress={deletingAccount ? undefined : confirmDeleteAccount}
+                    disabled={clearingData || deletingAccount}
+                    className="w-full flex-row items-center justify-between p-5 bg-red-500/10 rounded-3xl border border-red-500/20 active:scale-95 disabled:opacity-50"
+                    style={{ transform: [{ scale: 1 }] }}
+                  >
+                    <View className="flex-row items-center gap-4">
+                      <Trash2 size={24} color={Colors.pastelRed} />
+                      <Text className="font-bold text-lg text-red-500">
+                        {deletingAccount ? 'Deleting Account...' : 'Delete My Account'}
+                      </Text>
+                    </View>
+                  </Pressable>
                 </View>
 
                 <View className="mt-16">

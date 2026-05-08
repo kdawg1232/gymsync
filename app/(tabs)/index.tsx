@@ -1,7 +1,7 @@
 import { View, Text, RefreshControl, ScrollView, Image } from 'react-native';
 import { MotiView } from 'moti';
 import { Flame, Dumbbell, UserPlus, User as UserIcon } from 'lucide-react-native';
-import { startOfWeek, endOfWeek, addDays, parseISO, isWithinInterval, isSameDay } from 'date-fns';
+import { startOfWeek, endOfWeek, addDays, parseISO, isWithinInterval, isSameDay, format } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { useWorkoutLogs } from '@/hooks/useWorkoutLogs';
 import { Colors, MoodColors } from '@/constants/colors';
@@ -22,7 +22,10 @@ function PhotoDayGrid({ logs, userId, accentColor }: {
     <View className="flex-row gap-1.5 mt-4">
       {days.map((day) => {
         const log = logs.find(
-          (l) => l.user_id === userId && isSameDay(parseISO(l.logged_at), day),
+          (l) =>
+            l.user_id === userId &&
+            isSameDay(parseISO(l.logged_at), day) &&
+            !!l.image_url,
         );
         return (
           <View
@@ -40,10 +43,6 @@ function PhotoDayGrid({ logs, userId, accentColor }: {
                 className="w-full h-full"
                 resizeMode="cover"
               />
-            ) : log ? (
-              <View className="w-full h-full items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
-                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-              </View>
             ) : null}
           </View>
         );
@@ -65,23 +64,24 @@ export default function HomeScreen() {
   };
 
   const { myCount, partnerCount } = useMemo(() => {
-    let my = 0;
-    let partner = 0;
+    const myDays = new Set<string>();
+    const partnerDays = new Set<string>();
     for (const log of logs) {
+      if (!log.image_url) continue;
       const logDate = parseISO(log.logged_at);
-      if (isWithinInterval(logDate, weekInterval)) {
-        if (log.user_id === user?.id) my++;
-        else partner++;
-      }
+      if (!isWithinInterval(logDate, weekInterval)) continue;
+      const key = format(logDate, 'yyyy-MM-dd');
+      if (log.user_id === user?.id) myDays.add(key);
+      else if (log.user_id === partnerProfile?.id) partnerDays.add(key);
     }
-    return { myCount: my, partnerCount: partner };
-  }, [logs, user?.id, weekInterval.start.getTime()]);
+    return { myCount: myDays.size, partnerCount: partnerDays.size };
+  }, [logs, user?.id, partnerProfile?.id, weekInterval.start.getTime()]);
 
   useEffect(() => {
     if (user?.id) {
       getWeeklyStreak(user.id, goal).then(setStreak).catch(() => {});
     }
-  }, [user?.id, goal, logs.length]);
+  }, [user?.id, goal, logs]);
 
   // Sync widget data with real counts
   useEffect(() => {

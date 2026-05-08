@@ -1,124 +1,174 @@
-import { useState, useCallback, useMemo } from 'react';
-import { View, Text, Image, ScrollView, RefreshControl, Pressable, Modal, Dimensions } from 'react-native';
-import { MotiView } from 'moti';
-import { startOfWeek, addDays, isSameDay, format, parseISO, subDays } from 'date-fns';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  Modal,
+  Dimensions,
+  useWindowDimensions,
+  ActivityIndicator,
+} from 'react-native';
+import {
+  startOfWeek,
+  addDays,
+  isSameDay,
+  format,
+  parseISO,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isBefore,
+  addMonths,
+  subMonths,
+} from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { useWorkoutLogs } from '@/hooks/useWorkoutLogs';
+import { getWorkoutLogs } from '@/lib/database';
 import { FaceIcon } from '@/components/ui/FaceIcon';
 import { cn } from '@/lib/utils';
 import { Colors, MoodColors } from '@/constants/colors';
-import { Calendar, X, User as UserIcon } from 'lucide-react-native';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import type { WorkoutLog, Mood } from '@/types';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const BEREAL_CELL_SIZE = (SCREEN_WIDTH - 48 - 36) / 7; // padding 48, gaps 36 (6*6)
 
-function BeRealPhotoCell({
-  userLog,
-  partnerLog,
+/** Horizontal padding of History ScrollView (Tailwind p-6 ≈ 24px each side). */
+const SCROLL_H_PAD = 24 * 2;
+
+function PhotoDayCell({
+  log,
   dayLabel,
   onPress,
+  cellSize,
+  accentColor,
 }: {
-  userLog: WorkoutLog | undefined;
-  partnerLog: WorkoutLog | undefined;
+  log: WorkoutLog | undefined;
   dayLabel: string;
   onPress: (log: WorkoutLog) => void;
+  cellSize: number;
+  accentColor: string;
 }) {
-  const cellSize = BEREAL_CELL_SIZE;
-  const smallSize = cellSize * 0.38;
+  const cellH = cellSize * 1.3;
 
   return (
     <View style={{ width: cellSize, alignItems: 'center' }}>
-      <View
+      <Pressable
+        onPress={() => log && onPress(log)}
+        disabled={!log?.image_url}
         style={{
           width: cellSize,
-          height: cellSize * 1.3,
+          height: cellH,
           borderRadius: 8,
           overflow: 'hidden',
           backgroundColor: '#1A1A1A',
         }}
       >
-        {/* Main photo (user) */}
-        <Pressable
-          onPress={() => userLog && onPress(userLog)}
-          style={{ flex: 1 }}
-          disabled={!userLog?.image_url}
-        >
-          {userLog?.image_url ? (
+        {log?.image_url ? (
+          <View
+            style={{
+              width: cellSize,
+              height: cellH,
+              borderWidth: 2,
+              borderColor: MoodColors[log.mood as Mood] ?? accentColor,
+              borderRadius: 8,
+              overflow: 'hidden',
+            }}
+          >
             <Image
-              source={{ uri: userLog.image_url }}
-              style={{
-                width: '100%',
-                height: '100%',
-                borderWidth: 2,
-                borderColor: MoodColors[userLog.mood as Mood] ?? Colors.pastelGreen,
-                borderRadius: 8,
-              }}
+              source={{ uri: log.image_url }}
+              style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
             />
-          ) : userLog ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: MoodColors[userLog.mood as Mood] ?? Colors.pastelGreen,
-                borderRadius: 8,
-              }}
-            >
-              <FaceIcon mood={userLog.mood} size={16} color={MoodColors[userLog.mood as Mood]} />
-            </View>
-          ) : (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' }} />
-            </View>
-          )}
-        </Pressable>
-
-        {/* Small overlay photo (partner) — BeReal style */}
-        {partnerLog && (
-          <Pressable
-            onPress={() => onPress(partnerLog)}
+          </View>
+        ) : log ? (
+          <View
             style={{
-              position: 'absolute',
-              top: 3,
-              left: 3,
-              width: smallSize,
-              height: smallSize,
-              borderRadius: 4,
-              overflow: 'hidden',
-              borderWidth: 1.5,
-              borderColor: MoodColors[partnerLog.mood as Mood] ?? Colors.pastelPurple,
-              backgroundColor: '#1A1A1A',
+              width: cellSize,
+              height: cellH,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: MoodColors[log.mood as Mood] ?? accentColor,
+              borderRadius: 8,
             }}
-            disabled={!partnerLog.image_url}
           >
-            {partnerLog.image_url ? (
-              <Image
-                source={{ uri: partnerLog.image_url }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                <FaceIcon mood={partnerLog.mood} size={8} color={MoodColors[partnerLog.mood as Mood]} />
-              </View>
-            )}
-          </Pressable>
+            <FaceIcon mood={log.mood} size={16} color={MoodColors[log.mood as Mood]} />
+          </View>
+        ) : (
+          <View
+            style={{
+              width: cellSize,
+              height: cellH,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+          </View>
         )}
-      </View>
+      </Pressable>
       <Text className="text-white/30 text-[10px] font-bold mt-1">{dayLabel}</Text>
     </View>
   );
 }
 
+function hasPhotoLogForDay(
+  logs: WorkoutLog[],
+  userId: string,
+  date: Date,
+): boolean {
+  return logs.some(
+    (l) =>
+      l.user_id === userId &&
+      !!l.image_url &&
+      isSameDay(parseISO(l.logged_at), date),
+  );
+}
+
+function monthCalendarDays(month: Date): Date[] {
+  const first = startOfMonth(month);
+  const last = endOfMonth(month);
+  const gridStart = startOfWeek(first, { weekStartsOn: 1 });
+  const gridEnd = endOfWeek(last, { weekStartsOn: 1 });
+  return eachDayOfInterval({ start: gridStart, end: gridEnd });
+}
+
 export default function HistoryScreen() {
-  const { user, partnerProfile, partnerName, profile } = useApp();
-  const { logs, refetch, loading } = useWorkoutLogs(user?.id, partnerProfile?.id, { limit: 30 });
+  const { width: windowWidth } = useWindowDimensions();
+  const { user, partnerProfile, partnerName } = useApp();
+  const { logs, refetch } = useWorkoutLogs(user?.id, partnerProfile?.id, { limit: 80 });
   const [refreshing, setRefreshing] = useState(false);
   const [expandedLog, setExpandedLog] = useState<WorkoutLog | null>(null);
+
+  const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(new Date()));
+  const [monthLogs, setMonthLogs] = useState<WorkoutLog[]>([]);
+  const [monthFetching, setMonthFetching] = useState(false);
+  const monthFetchGen = useRef(0);
+
+  /** Photo card: ScrollView p-6 + inner card p-4 + 6 gaps between 7 cells. */
+  const berealCardPad = 16 * 2;
+  const berealGap = 6;
+  const berealInnerWidth = windowWidth - SCROLL_H_PAD - berealCardPad;
+  const berealCellSize = Math.max(
+    36,
+    Math.floor((berealInnerWidth - berealGap * 6) / 7),
+  );
+
+  /** Calendar card: ScrollView p-6 + card p-5 + 6 gaps. */
+  const calCardPad = 20 * 2;
+  const calGap = 4;
+  const calInnerWidth = windowWidth - SCROLL_H_PAD - calCardPad;
+  const calCellSize = Math.max(
+    28,
+    Math.floor((calInnerWidth - calGap * 6) / 7),
+  );
 
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
@@ -127,7 +177,9 @@ export default function HistoryScreen() {
     (userId: string, date: Date) =>
       logs.some(
         (l) =>
-          l.user_id === userId && isSameDay(parseISO(l.logged_at), date),
+          l.user_id === userId &&
+          !!l.image_url &&
+          isSameDay(parseISO(l.logged_at), date),
       ),
     [logs],
   );
@@ -150,20 +202,75 @@ export default function HistoryScreen() {
     [last7Days],
   );
 
-  const sortedLogs = useMemo(
-    () =>
-      [...logs].sort(
-        (a, b) =>
-          new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime(),
-      ),
-    [logs],
+  useEffect(() => {
+    if (!user?.id) {
+      setMonthLogs([]);
+      setMonthFetching(false);
+      return;
+    }
+    const gen = ++monthFetchGen.current;
+    setMonthFetching(true);
+    setMonthLogs([]);
+    const start = startOfMonth(calendarMonth);
+    const endExclusive = addMonths(start, 1);
+    getWorkoutLogs(user.id, partnerProfile?.id ?? null, {
+      from: start.toISOString(),
+      to: endExclusive.toISOString(),
+    })
+      .then((data) => {
+        if (monthFetchGen.current === gen) setMonthLogs(data);
+      })
+      .catch(() => {
+        if (monthFetchGen.current === gen) setMonthLogs([]);
+      })
+      .finally(() => {
+        if (monthFetchGen.current === gen) setMonthFetching(false);
+      });
+  }, [user?.id, partnerProfile?.id, calendarMonth]);
+
+  const calendarGridDays = useMemo(() => monthCalendarDays(calendarMonth), [calendarMonth]);
+
+  const calendarWeekRows = useMemo(() => {
+    const days = calendarGridDays;
+    const rows: Date[][] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      rows.push(days.slice(i, i + 7));
+    }
+    return rows;
+  }, [calendarGridDays]);
+
+  const getDayCalendarKind = useCallback(
+    (date: Date): 'both' | 'me' | 'partner' | 'empty' | 'outside' => {
+      const inMonth = isSameMonth(date, calendarMonth);
+      if (!inMonth) return 'outside';
+      const me = user ? hasPhotoLogForDay(monthLogs, user.id, date) : false;
+      const partner = partnerProfile
+        ? hasPhotoLogForDay(monthLogs, partnerProfile.id, date)
+        : false;
+      if (me && partner) return 'both';
+      if (me) return 'me';
+      if (partner) return 'partner';
+      return 'empty';
+    },
+    [calendarMonth, monthLogs, user, partnerProfile],
   );
+
+  const canGoNextMonth = isBefore(startOfMonth(calendarMonth), startOfMonth(new Date()));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
+    if (user?.id) {
+      const start = startOfMonth(calendarMonth);
+      const endExclusive = addMonths(start, 1);
+      const data = await getWorkoutLogs(user.id, partnerProfile?.id ?? null, {
+        from: start.toISOString(),
+        to: endExclusive.toISOString(),
+      }).catch(() => []);
+      setMonthLogs(data);
+    }
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetch, user?.id, partnerProfile?.id, calendarMonth]);
 
   const hasPartner = !!partnerProfile;
 
@@ -176,10 +283,7 @@ export default function HistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
         }
       >
-        <MotiView
-          from={{ opacity: 0, translateX: 20 }}
-          animate={{ opacity: 1, translateX: 0 }}
-        >
+        <View>
           <Text className="text-3xl font-bold text-pastel-yellow mb-6">History</Text>
 
           {/* Week Tracker */}
@@ -189,7 +293,6 @@ export default function HistoryScreen() {
             </Text>
 
             <View className="gap-5">
-              {/* Partner Row */}
               {hasPartner && (
                 <View className="gap-2">
                   <Text className="text-white/40 font-medium leading-snug">{partnerName}</Text>
@@ -202,7 +305,7 @@ export default function HistoryScreen() {
                           'w-6 h-6 rounded-full border-4 z-10',
                           hasLog(partnerProfile!.id, d)
                             ? 'bg-pastel-purple border-pastel-purple'
-                            : 'bg-[#1A1A1A] border-white/5'
+                            : 'bg-[#1A1A1A] border-white/5',
                         )}
                       />
                     ))}
@@ -210,7 +313,6 @@ export default function HistoryScreen() {
                 </View>
               )}
 
-              {/* My Row */}
               <View className="gap-2">
                 <Text className="text-white/40 font-medium leading-snug">You</Text>
                 <View className="flex-row justify-between relative">
@@ -222,14 +324,13 @@ export default function HistoryScreen() {
                         'w-6 h-6 rounded-full border-4 z-10',
                         user && hasLog(user.id, d)
                           ? 'bg-pastel-green border-pastel-green'
-                          : 'bg-[#1A1A1A] border-white/5'
+                          : 'bg-[#1A1A1A] border-white/5',
                       )}
                     />
                   ))}
                 </View>
               </View>
 
-              {/* Day Labels */}
               <View className="flex-row justify-between pt-2">
                 {DAY_LABELS.map((l, i) => (
                   <Text key={i} className="text-white/30 text-xs font-bold w-6 text-center">
@@ -240,96 +341,189 @@ export default function HistoryScreen() {
             </View>
           </View>
 
-          {/* BeReal-Style Photo Grid */}
-          <View className="bg-[#1A1A1A] p-4 rounded-3xl mb-8">
-            <Text className="text-white/60 font-bold text-sm tracking-wide uppercase mb-4">
-              Last 7 Days
+          {/* Photo Grids — you + partner */}
+          <View className="bg-[#1A1A1A] p-4 rounded-3xl mb-4 gap-5 overflow-hidden">
+            <View>
+              <Text className="text-white/60 font-bold text-sm tracking-wide uppercase mb-3">
+                You · Last 7 Days
+              </Text>
+              <View
+                className="flex-row items-start"
+                style={{ width: berealInnerWidth, gap: berealGap, alignSelf: 'center' }}
+              >
+                {last7Days.map((day, i) => (
+                  <PhotoDayCell
+                    key={`me-${day.toISOString()}`}
+                    cellSize={berealCellSize}
+                    log={user ? getLogForDay(user.id, day) : undefined}
+                    accentColor={Colors.pastelGreen}
+                    dayLabel={last7DayLabels[i]}
+                    onPress={setExpandedLog}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {hasPartner && (
+              <View className="pt-4 border-t border-white/10">
+                <Text className="text-white/60 font-bold text-sm tracking-wide uppercase mb-3">
+                  {partnerName} · Last 7 Days
+                </Text>
+                <View
+                  className="flex-row items-start"
+                  style={{ width: berealInnerWidth, gap: berealGap, alignSelf: 'center' }}
+                >
+                  {last7Days.map((day, i) => (
+                    <PhotoDayCell
+                      key={`partner-${day.toISOString()}`}
+                      cellSize={berealCellSize}
+                      log={getLogForDay(partnerProfile!.id, day)}
+                      accentColor={Colors.pastelPurple}
+                      dayLabel={last7DayLabels[i]}
+                      onPress={setExpandedLog}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Month calendar — photo days only */}
+          <View
+            className="bg-[#1A1A1A] p-5 rounded-3xl mb-8 overflow-hidden"
+            style={{ width: windowWidth - SCROLL_H_PAD, alignSelf: 'center' }}
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <Pressable
+                onPress={() => {
+                  if (monthFetching) return;
+                  setCalendarMonth((d) => startOfMonth(subMonths(d, 1)));
+                }}
+                disabled={monthFetching}
+                className="p-3 rounded-2xl bg-white/10 active:opacity-80"
+                accessibilityRole="button"
+                accessibilityLabel="Previous month"
+                hitSlop={12}
+              >
+                <ChevronLeft size={22} color="#fff" />
+              </Pressable>
+              <View className="flex-row items-center gap-2 flex-1 justify-center px-2">
+                <Text className="text-white font-black text-lg tracking-tight text-center">
+                  {format(calendarMonth, 'MMMM yyyy')}
+                </Text>
+                {monthFetching ? (
+                  <ActivityIndicator size="small" color={Colors.pastelYellow} />
+                ) : null}
+              </View>
+              <Pressable
+                onPress={() => {
+                  if (!canGoNextMonth || monthFetching) return;
+                  setCalendarMonth((d) => startOfMonth(addMonths(d, 1)));
+                }}
+                disabled={!canGoNextMonth || monthFetching}
+                className={cn(
+                  'p-3 rounded-2xl bg-white/10 active:opacity-80',
+                  (!canGoNextMonth || monthFetching) && 'opacity-30',
+                )}
+                accessibilityRole="button"
+                accessibilityLabel="Next month"
+                hitSlop={12}
+              >
+                <ChevronRight size={22} color="#fff" />
+              </Pressable>
+            </View>
+
+            <Text className="text-white/40 text-xs font-medium mb-2">
+              Days with a workout photo — you, {hasPartner ? partnerName : 'partner'}, or both.
             </Text>
-            <View className="flex-row justify-between">
-              {last7Days.map((day, i) => (
-                <BeRealPhotoCell
-                  key={day.toISOString()}
-                  userLog={user ? getLogForDay(user.id, day) : undefined}
-                  partnerLog={partnerProfile ? getLogForDay(partnerProfile.id, day) : undefined}
-                  dayLabel={last7DayLabels[i]}
-                  onPress={setExpandedLog}
-                />
+
+            <View
+              className="flex-row mb-2"
+              style={{ width: calInnerWidth, gap: calGap, alignSelf: 'center' }}
+            >
+              {DAY_LABELS.map((l, i) => (
+                <Text
+                  key={i}
+                  className="text-white/35 text-[10px] font-bold text-center"
+                  style={{ width: calCellSize }}
+                >
+                  {l}
+                </Text>
               ))}
             </View>
-          </View>
 
-          <Text className="text-xl font-bold text-white mb-4">Past Workouts</Text>
-
-          {/* Empty State */}
-          {sortedLogs.length === 0 && !loading && (
-            <View className="bg-[#1A1A1A] rounded-3xl p-8 items-center">
-              <Calendar size={40} color="rgba(255,255,255,0.2)" style={{ marginBottom: 12 }} />
-              <Text className="text-white/40 font-bold text-center">No workouts yet</Text>
-              <Text className="text-white/20 text-sm text-center mt-1">
-                Log your first workout to see it here.
-              </Text>
-            </View>
-          )}
-
-          {/* Workout Grid */}
-          <View className="flex-row flex-wrap gap-3 pb-8">
-            {sortedLogs.map((log) => {
-              const isMe = log.user_id === user?.id;
-              const displayName = isMe ? (profile?.name ?? 'Me') : partnerName;
-
-              return (
-                <Pressable
-                  key={log.id}
-                  className="w-[47%] aspect-[3/4] rounded-2xl overflow-hidden bg-[#1A1A1A]"
-                  onPress={() => log.image_url ? setExpandedLog(log) : undefined}
+            <View style={{ gap: calGap }}>
+              {calendarWeekRows.map((week, wi) => (
+                <View
+                  key={`${format(calendarMonth, 'yyyy-MM')}-${wi}`}
+                  className="flex-row"
+                  style={{ width: calInnerWidth, gap: calGap, alignSelf: 'center' }}
                 >
-                  {log.image_url ? (
-                    <Image
-                      source={{ uri: log.image_url }}
-                      className="w-full h-full absolute"
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View className="w-full h-full absolute bg-[#1A1A1A] items-center justify-center">
-                      <FaceIcon
-                        mood={log.mood}
-                        size={48}
-                        color="rgba(255,255,255,0.15)"
-                      />
-                    </View>
-                  )}
-                  <View className="absolute inset-0 bg-black/30" />
+                  {week.map((day) => {
+                    const kind = getDayCalendarKind(day);
+                    const bg =
+                      kind === 'both'
+                        ? Colors.pastelYellow
+                        : kind === 'me'
+                          ? Colors.pastelGreen
+                          : kind === 'partner'
+                            ? Colors.pastelPurple
+                            : kind === 'outside'
+                              ? 'rgba(255,255,255,0.02)'
+                              : 'rgba(255,255,255,0.06)';
+                    const photoDay = kind === 'both' || kind === 'me' || kind === 'partner';
+                    return (
+                      <View
+                        key={day.toISOString()}
+                        style={{
+                          width: calCellSize,
+                          height: calCellSize,
+                          borderRadius: 8,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: bg,
+                          opacity: kind === 'outside' ? 0.45 : 1,
+                        }}
+                      >
+                        <Text
+                          className={cn(
+                            'text-[11px] font-bold',
+                            photoDay ? 'text-black/75' : 'text-white/35',
+                          )}
+                        >
+                          {format(day, 'd')}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
 
-                  <View className="absolute bottom-3 left-3 right-3">
-                    <Text className="text-white font-bold leading-none">{displayName}</Text>
-                    <Text className="text-white/60 text-xs font-medium">
-                      {format(parseISO(log.logged_at), 'MMM d')}
-                    </Text>
-                  </View>
-
-                  <View className="absolute top-3 left-3 bg-black/40 p-1.5 rounded-full border border-white/10">
-                    <FaceIcon
-                      mood={log.mood}
-                      size={16}
-                      color={isMe ? Colors.pastelGreen : Colors.pastelPurple}
-                    />
-                  </View>
-
-                  {log.caption ? (
-                    <View className="absolute top-3 right-3 bg-black/40 px-2 py-1 rounded-lg border border-white/10 max-w-[100px]">
-                      <Text className="text-[10px] text-white italic" numberOfLines={1}>
-                        "{log.caption}"
-                      </Text>
-                    </View>
-                  ) : null}
-                </Pressable>
-              );
-            })}
+            <View className="flex-row flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/10">
+              <View className="flex-row items-center gap-2">
+                <View className="w-3 h-3 rounded-sm" style={{ backgroundColor: Colors.pastelGreen }} />
+                <Text className="text-white/50 text-xs font-medium">You</Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <View className="w-3 h-3 rounded-sm" style={{ backgroundColor: Colors.pastelPurple }} />
+                <Text className="text-white/50 text-xs font-medium">
+                  {hasPartner ? partnerName : 'Partner'}
+                </Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <View className="w-3 h-3 rounded-sm" style={{ backgroundColor: Colors.pastelYellow }} />
+                <Text className="text-white/50 text-xs font-medium">Both</Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <View className="w-3 h-3 rounded-sm bg-white/10" />
+                <Text className="text-white/50 text-xs font-medium">No photo</Text>
+              </View>
+            </View>
           </View>
-        </MotiView>
+        </View>
       </ScrollView>
 
-      {/* Photo Expand Modal */}
       <Modal
         visible={!!expandedLog}
         transparent
@@ -394,7 +588,7 @@ export default function HistoryScreen() {
                 </Text>
                 {expandedLog.caption && (
                   <Text className="text-white/80 text-base italic mt-3 text-center">
-                    "{expandedLog.caption}"
+                    {`"${expandedLog.caption}"`}
                   </Text>
                 )}
               </View>
