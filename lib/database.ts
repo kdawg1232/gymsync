@@ -92,6 +92,11 @@ export async function pairPartner(myId: string, partnerId: string, goal: number,
   return createPact(myId, partnerId, goal, wager);
 }
 
+export async function unpairPartners(userId: string) {
+  const { error } = await supabase.rpc('unpair_partners', { p_user_id: userId });
+  if (error) throw error;
+}
+
 // ── Workout Logs ──
 
 export async function addWorkoutLog(log: {
@@ -153,6 +158,37 @@ export async function getWorkoutLogsByUser(
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getTodayLog(userId: string): Promise<WorkoutLog | null> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('logged_at', today.toISOString())
+    .lt('logged_at', tomorrow.toISOString())
+    .order('logged_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWorkoutLog(
+  logId: string,
+  updates: Partial<Pick<WorkoutLog, 'image_url' | 'caption' | 'mood'>>,
+) {
+  const { error } = await supabase
+    .from('workout_logs')
+    .update(updates)
+    .eq('id', logId);
+  if (error) throw error;
 }
 
 // ── Streak Calculation ──

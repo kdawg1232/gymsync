@@ -122,12 +122,12 @@ export function StepCreateAccount({ nextStep }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1"
     >
-      <View className="flex-1 items-center pt-10 w-full">
+      <View className="flex-1 items-center w-full">
         <View className="flex-1 w-full max-w-sm justify-start px-4">
           <Text className="text-3xl font-black text-white text-center mb-2">
             Lock in your account.
           </Text>
-          <Text className="text-white/50 text-center mb-8">
+          <Text className="text-pastel-blue text-center mb-8">
             Create an account so your progress is saved.
           </Text>
 
@@ -171,7 +171,7 @@ export function StepCreateAccount({ nextStep }: Props) {
           {/* Divider */}
           <View className="flex-row items-center gap-4 mb-6">
             <View className="flex-1 h-px bg-white/10" />
-            <Text className="text-white/30 text-xs font-bold uppercase tracking-widest">
+            <Text className="text-white/40 text-xs font-bold uppercase tracking-widest">
               or use email
             </Text>
             <View className="flex-1 h-px bg-white/10" />
@@ -183,7 +183,7 @@ export function StepCreateAccount({ nextStep }: Props) {
 
             <View className="gap-2">
               <View className="flex-row items-center gap-2">
-                <Mail size={16} color="rgba(255,255,255,0.4)" />
+                <Mail size={16} color="rgba(255,255,255,0.45)" />
                 <Text className="text-xs font-bold uppercase tracking-widest text-white/40">
                   Email
                 </Text>
@@ -192,7 +192,7 @@ export function StepCreateAccount({ nextStep }: Props) {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="you@example.com"
-                placeholderTextColor="rgba(255,255,255,0.2)"
+                placeholderTextColor="rgba(255,255,255,0.35)"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -202,7 +202,7 @@ export function StepCreateAccount({ nextStep }: Props) {
 
             <View className="gap-2">
               <View className="flex-row items-center gap-2">
-                <Lock size={16} color="rgba(255,255,255,0.4)" />
+                <Lock size={16} color="rgba(255,255,255,0.45)" />
                 <Text className="text-xs font-bold uppercase tracking-widest text-white/40">
                   Password
                 </Text>
@@ -211,7 +211,7 @@ export function StepCreateAccount({ nextStep }: Props) {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="At least 6 characters"
-                placeholderTextColor="rgba(255,255,255,0.2)"
+                placeholderTextColor="rgba(255,255,255,0.35)"
                 secureTextEntry
                 className="text-lg font-medium text-white bg-white/5 px-4 py-3 rounded-xl border border-white/10"
               />
@@ -219,7 +219,7 @@ export function StepCreateAccount({ nextStep }: Props) {
           </View>
         </View>
 
-        <View className="w-full pb-8 pt-4 max-w-sm px-4">
+        <View className="w-full pt-4 pb-2 mb-5 max-w-sm px-4 self-center">
           <Pressable
             onPress={handleSignUp}
             disabled={!canSignUp || isDisabled}

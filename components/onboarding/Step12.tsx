@@ -49,12 +49,12 @@ export function Step12({ nextStep }: Props) {
   };
 
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-center items-center px-4">
         <Text className="text-4xl font-black text-white text-center mb-4">
           Tandem requires two.
         </Text>
-        <Text className="text-white/50 text-base text-center leading-relaxed mb-12">
+        <Text className="text-pastel-blue text-base text-center leading-relaxed mb-12">
           Your dashboard is locked until your partner joins the pact. Summon them.
         </Text>
 
@@ -75,7 +75,7 @@ export function Step12({ nextStep }: Props) {
 
           {profile?.invite_code && (
             <View className="bg-white/5 p-3 rounded-xl mb-4 items-center border border-white/5">
-              <Text className="text-xs text-white/40 mb-1 font-bold">Your Code</Text>
+              <Text className="text-xs text-white/45 mb-1 font-bold">Your Code</Text>
               <Text className="text-2xl font-black tracking-widest text-pastel-yellow">
                 {profile.invite_code}
               </Text>
@@ -93,13 +93,13 @@ export function Step12({ nextStep }: Props) {
 
         {/* Join with partner's code */}
         <View className="bg-[#1A1A1A] w-full p-6 rounded-[32px] border border-white/5">
-          <Text className="text-white/60 text-sm font-bold mb-3">Have a code from your partner?</Text>
+          <Text className="text-white/50 text-sm font-bold mb-3">Have a code from your partner?</Text>
           <View className="flex-row gap-2">
             <TextInput
               value={partnerCode}
               onChangeText={setPartnerCode}
               placeholder="ENTER CODE"
-              placeholderTextColor="rgba(255,255,255,0.2)"
+              placeholderTextColor="rgba(255,255,255,0.35)"
               className="flex-1 bg-white/5 border border-white/10 px-4 py-3 rounded-xl font-black tracking-widest text-white text-center uppercase"
               maxLength={6}
               autoCapitalize="characters"
@@ -115,7 +115,7 @@ export function Step12({ nextStep }: Props) {
         </View>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4 gap-4">
+      <View className="w-full pt-4 pb-2 mb-5 max-w-sm px-4 gap-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-pastel-purple py-4 rounded-2xl items-center active:opacity-80"
@@ -123,7 +123,7 @@ export function Step12({ nextStep }: Props) {
           <Text className="text-black font-bold text-lg">Continue</Text>
         </Pressable>
         <Pressable onPress={nextStep} className="w-full py-2 items-center">
-          <Text className="text-white/50 font-bold text-sm">Skip — I'll pair later</Text>
+          <Text className="text-white/45 font-bold text-sm">Skip — I'll pair later</Text>
         </Pressable>
       </View>
     </View>

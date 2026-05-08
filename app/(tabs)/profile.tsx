@@ -16,7 +16,7 @@ import { SettingsMenuItem } from '@/components/ui/SettingsMenuItem';
 import { SettingsToggle } from '@/components/ui/SettingsToggle';
 import { Colors } from '@/constants/colors';
 import {
-  getProfileByInviteCode, pairPartner, updatePact,
+  getProfileByInviteCode, pairPartner, updatePact, unpairPartners,
   updateProfile, getNotificationPrefs, updateNotificationPrefs,
 } from '@/lib/database';
 import { uploadAvatar } from '@/lib/storage';
@@ -37,6 +37,7 @@ export default function ProfileScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [partnerCodeInput, setPartnerCodeInput] = useState('');
   const [addingPartner, setAddingPartner] = useState(false);
+  const [removingPartner, setRemovingPartner] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Settings state
@@ -109,6 +110,34 @@ export default function ProfileScreen() {
     } finally {
       setAddingPartner(false);
     }
+  };
+
+  const removePartner = () => {
+    if (!user) return;
+    Alert.alert(
+      'Remove partner?',
+      'You will both be unlinked and your current pact will end. You can pair with someone else using invite codes.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            setRemovingPartner(true);
+            try {
+              await unpairPartners(user.id);
+              await refreshProfile();
+              await refreshPact();
+              Alert.alert('Done', 'Your partner has been removed.');
+            } catch (e: any) {
+              Alert.alert('Error', e.message ?? 'Could not remove partner.');
+            } finally {
+              setRemovingPartner(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   // ── Settings handlers ──
@@ -211,9 +240,18 @@ export default function ProfileScreen() {
           animate={{ opacity: 1, translateY: 0 }}
         >
           <View className="flex-row justify-between items-center mb-8">
-            <Text className="text-3xl font-bold text-pastel-green">
-              {profile?.name ?? 'Profile'}
-            </Text>
+            <View className="flex-row items-center gap-3 flex-1">
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} className="w-12 h-12 rounded-full" />
+              ) : (
+                <View className="w-12 h-12 rounded-full bg-pastel-green/20 items-center justify-center">
+                  <UserIcon size={22} color={Colors.pastelGreen} />
+                </View>
+              )}
+              <Text className="text-3xl font-bold text-pastel-green flex-1" numberOfLines={1}>
+                {profile?.name ?? 'Profile'}
+              </Text>
+            </View>
             <Pressable
               onPress={() => setShowSettings(true)}
               className="p-2 bg-white/10 rounded-full active:opacity-80"
@@ -340,6 +378,20 @@ export default function ProfileScreen() {
                   </Pressable>
                 </View>
               </View>
+
+              {partnerProfile && (
+                <View className="pt-6 border-t border-white/10">
+                  <Pressable
+                    onPress={removePartner}
+                    disabled={removingPartner}
+                    className="w-full py-3.5 items-center rounded-xl border border-white/15 bg-white/5 active:opacity-80"
+                  >
+                    <Text className="text-white/80 font-bold">
+                      {removingPartner ? 'Removing...' : 'Remove partner & pair with someone else'}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
           </View>
         </MotiView>

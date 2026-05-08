@@ -137,6 +137,30 @@ BEGIN
 END;
 $$;
 
+-- Clears partner link for both users and ends active pacts between them.
+CREATE OR REPLACE FUNCTION unpair_partners(p_user_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_partner_id UUID;
+BEGIN
+  SELECT partner_id INTO v_partner_id FROM profiles WHERE id = p_user_id;
+  UPDATE profiles SET partner_id = NULL WHERE id = p_user_id;
+  IF v_partner_id IS NOT NULL THEN
+    UPDATE profiles SET partner_id = NULL WHERE id = v_partner_id;
+  END IF;
+  UPDATE pacts SET active = false
+  WHERE active = true
+    AND (user1_id = p_user_id OR user2_id = p_user_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION pair_partners(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION unpair_partners(UUID) TO authenticated;
+
 -- ═══════════════════════════════════════
 -- STORAGE BUCKETS
 -- ═══════════════════════════════════════
@@ -162,6 +186,57 @@ CREATE POLICY "Workout photos are publicly accessible"
 CREATE POLICY "Users can upload their own workout photos"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'workout-photos' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "Users can update their own workout photos"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (bucket_id = 'workout-photos' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own workout photos"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (bucket_id = 'workout-photos' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "Service role can delete workout photos"
+  ON storage.objects FOR DELETE TO service_role
+  USING (bucket_id = 'workout-photos');
+
+-- ═══════════════════════════════════════
+-- WORKOUT LOG UPDATE POLICY
+-- ═══════════════════════════════════════
+
+CREATE POLICY "Users can update their own logs"
+  ON workout_logs FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════
+-- AUTO-CLEANUP: Delete workout photos older than 7 days
+-- Requires pg_cron extension (enable in Supabase Dashboard → Database → Extensions)
+-- ═══════════════════════════════════════
+
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+CREATE OR REPLACE FUNCTION cleanup_old_workout_photos()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM storage.objects
+  WHERE bucket_id = 'workout-photos'
+    AND created_at < NOW() - INTERVAL '7 days';
+
+  UPDATE workout_logs
+  SET image_url = NULL
+  WHERE image_url IS NOT NULL
+    AND logged_at < NOW() - INTERVAL '7 days';
+END;
+$$;
+
+SELECT cron.schedule(
+  'cleanup-workout-photos',
+  '0 3 * * *',
+  'SELECT cleanup_old_workout_photos()'
+);
 
 -- ═══════════════════════════════════════
 -- REALTIME

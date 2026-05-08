@@ -10,6 +10,7 @@ import {
   Quicksand_700Bold,
 } from '@expo-google-fonts/quicksand';
 import { AppProvider, useApp } from '@/context/AppContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import '../global.css';
 
@@ -61,16 +62,18 @@ export default function RootLayout() {
   }
 
   return (
-    <AppProvider>
-      <StatusBar style="light" />
-      <AuthGuard>
-        <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
-          <Stack.Screen name="sign-in" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-        </Stack>
-      </AuthGuard>
-    </AppProvider>
+    <SafeAreaProvider>
+      <AppProvider>
+        <StatusBar style="light" />
+        <AuthGuard>
+          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+            <Stack.Screen name="sign-in" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+          </Stack>
+        </AuthGuard>
+      </AppProvider>
+    </SafeAreaProvider>
   );
 }

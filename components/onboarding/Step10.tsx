@@ -27,10 +27,10 @@ export function Step10({ nextStep }: Props) {
   };
 
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-start px-4">
         <Text className="text-3xl font-black text-white text-center mb-4">Show your face.</Text>
-        <Text className="text-white/50 text-center mb-16">
+        <Text className="text-pastel-blue text-center mb-16">
           Put a face to the name. Make it bold.
         </Text>
 
@@ -46,8 +46,8 @@ export function Step10({ nextStep }: Props) {
               />
             ) : (
               <>
-                <Camera size={64} color="rgba(255,255,255,0.15)" />
-                <Text className="text-white/30 font-bold text-sm mt-4">Tap to Choose Photo</Text>
+                <Camera size={64} color="rgba(255,255,255,0.3)" />
+                <Text className="text-white/45 font-bold text-sm mt-4">Tap to Choose Photo</Text>
               </>
             )}
           </View>
@@ -57,7 +57,7 @@ export function Step10({ nextStep }: Props) {
         </Pressable>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4 gap-3">
+      <View className="w-full pt-4 pb-2 mb-5 max-w-sm px-4 gap-3 self-center">
         {onboardingAvatarUri && (
           <Pressable
             onPress={handleContinue}

@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock } from 'lucide-react-native';
 import { signIn, signInWithApple, signInWithGoogle } from '@/lib/auth';
-import { Colors } from '@/constants/colors';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -68,31 +68,29 @@ export default function SignInScreen() {
   const isDisabled = loading || !!oauthLoading;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-[#0A0A0A]"
-    >
-      <ScrollView
+    <SafeAreaView className="flex-1 bg-[#0A0A0A]" edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
-        contentContainerClassName="flex-grow"
-        keyboardShouldPersistTaps="handled"
       >
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 300 }}
-          className="flex-1 px-6"
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="flex-grow px-6 pt-10 pb-12"
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View className="pt-14 pb-4" />
-
-          <View className="flex-1 max-w-sm w-full self-center">
-            <Text className="text-4xl font-black text-white mb-2">
-              Welcome back.
-            </Text>
-            <Text className="text-white/50 text-base mb-10">
-              Sign in to pick up where you left off.
-            </Text>
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 300 }}
+            className="flex-1 w-full max-w-sm self-center"
+          >
+            <View>
+              <Text className="text-4xl font-black text-white mb-2">
+                Welcome back.
+              </Text>
+              <Text className="text-white/50 text-base mb-10">
+                Sign in to pick up where you left off.
+              </Text>
 
             {/* OAuth Buttons */}
             <View className="gap-3 mb-8">
@@ -202,9 +200,10 @@ export default function SignInScreen() {
                 <Text className="text-pastel-orange font-bold">Get started</Text>
               </Text>
             </Pressable>
-          </View>
-        </MotiView>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            </View>
+          </MotiView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

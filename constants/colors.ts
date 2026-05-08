@@ -1,3 +1,5 @@
+import type { Mood } from '@/types';
+
 export const Colors = {
   pastelOrange: '#F9C38E',
   pastelPurple: '#959BFF',
@@ -16,3 +18,10 @@ export const Colors = {
   border: 'rgba(255,255,255,0.1)',
   borderLight: 'rgba(255,255,255,0.05)',
 } as const;
+
+export const MoodColors: Record<Mood, string> = {
+  happy: Colors.pastelOrange,
+  pumped: Colors.pastelGreen,
+  tired: Colors.pastelYellow,
+  dead: Colors.pastelPurple,
+};

@@ -36,11 +36,11 @@ function WagerIcon({ type, color }: { type: string; color: string }) {
 export function Step8({ nextStep, wager, setWager }: Props) {
   return (
     <View className="flex-1 items-center w-full">
-      <View className="flex-1 w-full max-w-sm justify-start pt-8 px-4">
+      <View className="flex-1 w-full max-w-sm justify-start px-4">
         <Text className="text-4xl font-black text-white leading-tight mb-2">
           What's the prize?
         </Text>
-        <Text className="text-white/50 text-sm mb-10">
+        <Text className="text-pastel-blue text-sm mb-10">
           Select the weekly reward. The loser pays up.
         </Text>
 
@@ -62,7 +62,7 @@ export function Step8({ nextStep, wager, setWager }: Props) {
                 </View>
               )}
               <View className="mb-4">
-                <WagerIcon type={w.icon} color="rgba(255,255,255,0.8)" />
+                <WagerIcon type={w.icon} color="rgba(255,255,255,0.75)" />
               </View>
               <Text className="font-bold text-lg text-white">{w.label}</Text>
             </Pressable>
@@ -71,16 +71,16 @@ export function Step8({ nextStep, wager, setWager }: Props) {
 
         <View className="bg-[#1A1A1A] p-4 rounded-3xl flex-row items-center gap-4 border border-white/5">
           <View className="w-12 h-12 bg-white/5 rounded-xl items-center justify-center">
-            <Plus size={24} color="rgba(255,255,255,0.5)" />
+            <Plus size={24} color="rgba(255,255,255,0.45)" />
           </View>
           <View>
             <Text className="font-bold text-white">Custom Reward</Text>
-            <Text className="text-xs text-white/40">Set your own stakes</Text>
+            <Text className="text-xs text-white/45">Set your own stakes</Text>
           </View>
         </View>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-5 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-pastel-blue py-4 rounded-2xl items-center active:opacity-80"

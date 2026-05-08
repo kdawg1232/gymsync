@@ -8,14 +8,14 @@ interface Props {
 
 export function Step4({ nextStep }: Props) {
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-center px-4">
         <View className="mb-12">
           <Text className="text-3xl font-black text-white text-center leading-tight">
             Miss your goal?{'\n'}
             <Text className="text-pastel-red">You owe.</Text>
           </Text>
-          <Text className="text-white/40 text-sm text-center mt-3 leading-relaxed px-2">
+          <Text className="text-pastel-blue text-sm text-center mt-3 leading-relaxed px-2">
             A friendly wager makes every workout count.{'\n'}The winner picks — the loser pays up.
           </Text>
         </View>
@@ -74,12 +74,12 @@ export function Step4({ nextStep }: Props) {
           </View>
         </View>
 
-        <Text className="text-white/30 text-xs text-center mt-6 italic">
+        <Text className="text-white/45 text-xs text-center mt-6 italic">
           You'll pick your own wager in a moment.
         </Text>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-12 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"

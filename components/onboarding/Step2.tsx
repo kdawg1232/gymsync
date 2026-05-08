@@ -8,13 +8,13 @@ interface Props {
 
 export function Step2({ nextStep }: Props) {
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-center px-4">
         <View className="mb-12">
           <Text className="text-3xl font-black text-white text-center leading-tight">
             Log it. <Text className="text-pastel-blue">Prove it.</Text>
           </Text>
-          <Text className="text-white/40 text-sm text-center mt-3 leading-relaxed px-2">
+          <Text className="text-pastel-blue text-sm text-center mt-3 leading-relaxed px-2">
             Every workout gets a photo. Your partner is{'\n'}your witness. No faking it.
           </Text>
         </View>
@@ -22,7 +22,7 @@ export function Step2({ nextStep }: Props) {
         <View className="flex-row gap-3 mb-8">
           {/* "You log" panel */}
           <View className="flex-1 bg-[#1A1A1A] rounded-2xl border border-white/5 p-4 gap-3">
-            <Text className="text-[10px] text-white/30 uppercase tracking-widest font-bold text-center">
+            <Text className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center">
               You Log
             </Text>
 
@@ -30,23 +30,23 @@ export function Step2({ nextStep }: Props) {
               <View className="w-14 h-14 rounded-xl bg-pastel-blue/15 items-center justify-center border border-dashed border-pastel-blue/30">
                 <Camera size={22} color={Colors.pastelBlue} />
               </View>
-              <Text className="text-[10px] text-white/30 font-medium">Workout snap</Text>
+              <Text className="text-[10px] text-white/40 font-medium">Workout snap</Text>
             </View>
 
             <View className="flex-row items-center justify-center gap-2 bg-black/30 rounded-lg py-2 px-3">
               <Smile size={14} color={Colors.pastelGreen} />
-              <Text className="text-[10px] text-white/40 font-medium">Feeling pumped</Text>
+              <Text className="text-[10px] text-white/45 font-medium">Feeling pumped</Text>
             </View>
           </View>
 
           {/* Arrow */}
           <View className="justify-center">
-            <Text className="text-white/20 text-lg">→</Text>
+            <Text className="text-white/35 text-lg">→</Text>
           </View>
 
           {/* "Sarah sees it" panel */}
           <View className="flex-1 bg-[#1A1A1A] rounded-2xl border border-white/5 p-4 gap-3">
-            <Text className="text-[10px] text-white/30 uppercase tracking-widest font-bold text-center">
+            <Text className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center">
               Partner Sees
             </Text>
 
@@ -54,22 +54,22 @@ export function Step2({ nextStep }: Props) {
               <View className="w-14 h-14 rounded-xl bg-pastel-green/15 items-center justify-center">
                 <Check size={22} color={Colors.pastelGreen} />
               </View>
-              <Text className="text-[10px] text-pastel-green/60 font-medium">Verified</Text>
+              <Text className="text-[10px] text-white/50 font-medium">Verified</Text>
             </View>
 
             <View className="flex-row items-center justify-center gap-2 bg-black/30 rounded-lg py-2 px-3">
               <User size={14} color={Colors.pastelOrange} />
-              <Text className="text-[10px] text-white/40 font-medium">Partner notified</Text>
+              <Text className="text-[10px] text-white/45 font-medium">Partner notified</Text>
             </View>
           </View>
         </View>
 
-        <Text className="text-white/30 text-xs text-center italic">
+        <Text className="text-white/45 text-xs text-center italic">
           Your partner sees the proof in real time.
         </Text>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-12 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"

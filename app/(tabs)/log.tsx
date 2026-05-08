@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, Pressable, TextInput, Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
-import { Camera } from 'lucide-react-native';
+import { Camera, RefreshCw } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '@/context/AppContext';
 import { FaceIcon } from '@/components/ui/FaceIcon';
 import { cn } from '@/lib/utils';
-import { addWorkoutLog } from '@/lib/database';
+import { addWorkoutLog, getTodayLog, updateWorkoutLog } from '@/lib/database';
 import { uploadWorkoutPhoto } from '@/lib/storage';
 import { Colors } from '@/constants/colors';
-import type { Mood } from '@/types';
+import type { Mood, WorkoutLog } from '@/types';
 import { useRouter } from 'expo-router';
 
 const BG_COLORS: Record<Mood, string> = {
@@ -25,6 +25,23 @@ export default function LogScreen() {
   const [caption, setCaption] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [existingLog, setExistingLog] = useState<WorkoutLog | null>(null);
+  const [checkingToday, setCheckingToday] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    setCheckingToday(true);
+    getTodayLog(user.id)
+      .then((log) => {
+        setExistingLog(log);
+        if (log) {
+          setMood(log.mood);
+          setCaption(log.caption ?? '');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCheckingToday(false));
+  }, [user]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -51,22 +68,31 @@ export default function LogScreen() {
     if (!user) return;
     setSubmitting(true);
     try {
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = existingLog?.image_url ?? null;
       if (imageUri) {
         imageUrl = await uploadWorkoutPhoto(user.id, imageUri);
       }
 
-      await addWorkoutLog({
-        user_id: user.id,
-        pact_id: pact?.id ?? null,
-        image_url: imageUrl,
-        caption: caption || null,
-        mood,
-      });
+      if (existingLog) {
+        await updateWorkoutLog(existingLog.id, {
+          image_url: imageUrl,
+          caption: caption || null,
+          mood,
+        });
+      } else {
+        await addWorkoutLog({
+          user_id: user.id,
+          pact_id: pact?.id ?? null,
+          image_url: imageUrl,
+          caption: caption || null,
+          mood,
+        });
+      }
 
       setMood('happy');
       setCaption('');
       setImageUri(null);
+      setExistingLog(null);
       router.replace('/(tabs)');
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Could not log workout.');
@@ -75,7 +101,8 @@ export default function LogScreen() {
     }
   };
 
-  const canSubmit = !submitting && (!!imageUri || !!caption.trim());
+  const canSubmit = !submitting && !checkingToday && (!!imageUri || !!caption.trim() || !!existingLog);
+  const hasExistingPhoto = !!existingLog?.image_url;
 
   return (
     <View className="flex-1" style={{ backgroundColor: BG_COLORS[mood] }}>
@@ -85,11 +112,19 @@ export default function LogScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center">
-          <Text className="text-3xl font-bold text-black text-center mb-6">
-            How was the workout?
+          <Text className="text-3xl font-bold text-black text-center mb-2">
+            {existingLog ? 'Update your log' : 'How was the workout?'}
           </Text>
 
-          <View className="flex-row flex-wrap gap-3 justify-center mb-6" style={{ maxWidth: 240 }}>
+          {existingLog && (
+            <View className="bg-black/10 px-4 py-2 rounded-full mb-4">
+              <Text className="text-black/70 font-medium text-sm text-center">
+                You already logged today — update your entry below
+              </Text>
+            </View>
+          )}
+
+          <View className={cn('flex-row flex-wrap gap-3 justify-center', existingLog ? 'mb-4' : 'mb-6')} style={{ maxWidth: 240 }}>
             {(['happy', 'pumped', 'tired', 'dead'] as const).map((m) => (
               <Pressable
                 key={m}
@@ -128,6 +163,18 @@ export default function LogScreen() {
                   className="w-full h-full"
                   style={{ resizeMode: 'cover' }}
                 />
+              ) : hasExistingPhoto ? (
+                <View className="w-full h-full">
+                  <Image
+                    source={{ uri: existingLog!.image_url! }}
+                    className="w-full h-full"
+                    style={{ resizeMode: 'cover' }}
+                  />
+                  <View className="absolute inset-0 bg-black/30 items-center justify-center">
+                    <RefreshCw size={36} color="rgba(255,255,255,0.9)" />
+                    <Text className="text-white font-bold mt-2">Tap to replace photo</Text>
+                  </View>
+                </View>
               ) : (
                 <View className="items-center">
                   <Camera size={48} color="rgba(0,0,0,0.4)" />
@@ -160,7 +207,11 @@ export default function LogScreen() {
             <ActivityIndicator color="#fff" size="small" />
           ) : null}
           <Text className="text-white text-xl font-bold">
-            {submitting ? 'Logging...' : `Send to ${partnerName}`}
+            {submitting
+              ? (existingLog ? 'Updating...' : 'Logging...')
+              : existingLog
+                ? 'Update Entry'
+                : `Send to ${partnerName}`}
           </Text>
         </Pressable>
       </View>

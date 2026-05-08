@@ -1,14 +1,55 @@
-import { View, Text, Pressable, RefreshControl, ScrollView } from 'react-native';
+import { View, Text, RefreshControl, ScrollView, Image } from 'react-native';
 import { MotiView } from 'moti';
-import { Flame, Dumbbell, UserPlus } from 'lucide-react-native';
-import { startOfWeek, endOfWeek, parseISO, isWithinInterval } from 'date-fns';
+import { Flame, Dumbbell, UserPlus, User as UserIcon } from 'lucide-react-native';
+import { startOfWeek, endOfWeek, addDays, parseISO, isWithinInterval, isSameDay } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { useWorkoutLogs } from '@/hooks/useWorkoutLogs';
-import { FaceIcon } from '@/components/ui/FaceIcon';
-import { Colors } from '@/constants/colors';
+import { Colors, MoodColors } from '@/constants/colors';
 import { useState, useCallback, useMemo } from 'react';
 import { getWeeklyStreak } from '@/lib/database';
 import { useEffect } from 'react';
+
+function PhotoDayGrid({ logs, userId, accentColor }: {
+  logs: { logged_at: string; image_url: string | null; user_id: string; mood: string }[];
+  userId: string;
+  accentColor: string;
+}) {
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
+
+  return (
+    <View className="flex-row gap-1.5 mt-4">
+      {days.map((day) => {
+        const log = logs.find(
+          (l) => l.user_id === userId && isSameDay(parseISO(l.logged_at), day),
+        );
+        return (
+          <View
+            key={day.toISOString()}
+            className="flex-1 aspect-square rounded-lg overflow-hidden"
+            style={{
+              backgroundColor: log ? 'transparent' : 'rgba(0,0,0,0.08)',
+              borderWidth: log?.mood ? 2 : 0,
+              borderColor: log?.mood ? (MoodColors as any)[log.mood] ?? accentColor : 'transparent',
+            }}
+          >
+            {log?.image_url ? (
+              <Image
+                source={{ uri: log.image_url }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            ) : log ? (
+              <View className="w-full h-full items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
+                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const { user, profile, partnerProfile, pact, goal, wager, myDebt, partnerName } = useApp();
@@ -76,30 +117,44 @@ export default function HomeScreen() {
 
         {/* Partner Card */}
         {hasPartner ? (
-          <View className="bg-pastel-purple rounded-[32px] p-6 mb-8 overflow-hidden relative">
-            <View className="relative z-10">
-              <Text className="text-2xl font-bold text-black mb-4">{partnerName}'s Week</Text>
-              <View className="flex-row items-end gap-3 mb-6">
-                <Text className="text-5xl font-black text-black">{partnerCount}</Text>
-                <Text className="text-lg font-medium text-black/60 pb-1">/ {goal} days</Text>
-              </View>
-
-              <View className="w-full bg-black/10 h-3 rounded-full overflow-hidden">
-                <MotiView
-                  from={{ width: '0%' }}
-                  animate={{
-                    width: `${Math.min((partnerCount / goal) * 100, 100)}%`,
-                  }}
-                  transition={{ type: 'timing', duration: 800 }}
-                  className="bg-black h-full rounded-full"
-                  style={{ width: '0%' }}
+          <View className="bg-pastel-purple rounded-[32px] p-6 mb-8">
+            <View className="flex-row items-center gap-3 mb-4">
+              {partnerProfile.avatar_url ? (
+                <Image
+                  source={{ uri: partnerProfile.avatar_url }}
+                  className="w-10 h-10 rounded-full"
                 />
-              </View>
+              ) : (
+                <View className="w-10 h-10 rounded-full bg-black/10 items-center justify-center">
+                  <UserIcon size={18} color="rgba(0,0,0,0.5)" />
+                </View>
+              )}
+              <Text className="text-2xl font-bold text-black flex-1" numberOfLines={1}>
+                {`${partnerName}'s Week`}
+              </Text>
+            </View>
+            <View className="flex-row items-end gap-3 mb-6">
+              <Text className="text-5xl font-black text-black">{partnerCount}</Text>
+              <Text className="text-lg font-medium text-black/60 pb-1">/ {goal} days</Text>
             </View>
 
-            <View className="absolute right-[-20px] bottom-[-20px] opacity-20">
-              <FaceIcon mood="happy" size={192} color="#000" />
+            <View className="w-full bg-black/10 h-3 rounded-full overflow-hidden">
+              <MotiView
+                from={{ width: '0%' }}
+                animate={{
+                  width: `${Math.min((partnerCount / goal) * 100, 100)}%`,
+                }}
+                transition={{ type: 'timing', duration: 800 }}
+                className="bg-black h-full rounded-full"
+                style={{ width: '0%' }}
+              />
             </View>
+
+            <PhotoDayGrid
+              logs={logs}
+              userId={partnerProfile.id}
+              accentColor="#000"
+            />
           </View>
         ) : (
           <View className="bg-[#1A1A1A] border border-white/10 rounded-[32px] p-6 mb-8 items-center">
@@ -112,35 +167,53 @@ export default function HomeScreen() {
         )}
 
         {/* Your Progress */}
-        <View className="bg-pastel-orange rounded-[32px] p-6 mb-8 overflow-hidden relative">
-          <View className="relative z-10">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-black">Your Progress</Text>
-              {streak > 0 && (
-                <View className="bg-black/10 px-3 py-1 rounded-full flex-row items-center gap-1">
-                  <Flame size={16} color="#FF5722" fill="#FF5722" />
-                  <Text className="text-sm font-bold text-black">{streak} wk{streak !== 1 ? 's' : ''}</Text>
+        <View className="bg-pastel-orange rounded-[32px] p-6 mb-8">
+          <View className="flex-row justify-between items-start gap-3 mb-4">
+            <View className="flex-row items-center gap-3 flex-1 shrink">
+              {profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <View className="w-10 h-10 rounded-full bg-black/10 items-center justify-center">
+                  <UserIcon size={18} color="rgba(0,0,0,0.5)" />
                 </View>
               )}
+              <Text className="text-2xl font-bold text-black flex-1 shrink" numberOfLines={1}>Your Progress</Text>
             </View>
-
-            <View className="flex-row items-end gap-2 mb-4">
-              <Text className="text-4xl font-black text-black">{myCount}</Text>
-              <Text className="text-sm font-medium text-black/60 pb-1">/ {goal}</Text>
-            </View>
-
-            <View className="w-full bg-black/10 h-3 rounded-full overflow-hidden">
-              <MotiView
-                from={{ width: '0%' }}
-                animate={{
-                  width: `${Math.min((myCount / goal) * 100, 100)}%`,
-                }}
-                transition={{ type: 'timing', duration: 800 }}
-                className="bg-black h-full rounded-full"
-                style={{ width: '0%' }}
-              />
-            </View>
+            {streak > 0 && (
+              <View className="bg-black/10 px-3 py-1 rounded-full flex-row items-center gap-1 shrink-0">
+                <Flame size={16} color="#FF5722" fill="#FF5722" />
+                <Text className="text-sm font-bold text-black">{streak} wk{streak !== 1 ? 's' : ''}</Text>
+              </View>
+            )}
           </View>
+
+          <View className="flex-row items-end gap-3 mb-6">
+            <Text className="text-5xl font-black text-black">{myCount}</Text>
+            <Text className="text-lg font-medium text-black/60 pb-1">/ {goal} days</Text>
+          </View>
+
+          <View className="w-full bg-black/10 h-3 rounded-full overflow-hidden">
+            <MotiView
+              from={{ width: '0%' }}
+              animate={{
+                width: `${Math.min((myCount / goal) * 100, 100)}%`,
+              }}
+              transition={{ type: 'timing', duration: 800 }}
+              className="bg-black h-full rounded-full"
+              style={{ width: '0%' }}
+            />
+          </View>
+
+          {user && (
+            <PhotoDayGrid
+              logs={logs}
+              userId={user.id}
+              accentColor="#000"
+            />
+          )}
         </View>
 
         {/* Wager Card */}

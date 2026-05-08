@@ -8,12 +8,12 @@ interface Props {
 
 export function Step7({ nextStep }: Props) {
   return (
-    <View className="flex-1 items-center pt-16 w-full">
-      <View className="flex-1 w-full max-w-sm justify-start pt-4 px-4">
+    <View className="flex-1 items-center w-full">
+      <View className="flex-1 w-full max-w-sm justify-start px-4">
         <Text className="text-3xl font-black text-white text-center leading-tight mb-2">
           The Rules of the Game.
         </Text>
-        <Text className="text-white/50 text-sm text-center mb-12">
+        <Text className="text-pastel-blue text-sm text-center mb-12">
           Accountability only works if it's fair.
         </Text>
 
@@ -55,7 +55,7 @@ export function Step7({ nextStep }: Props) {
         </View>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-5 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"

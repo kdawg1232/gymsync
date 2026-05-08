@@ -51,25 +51,25 @@ function ProgressBar({ label, filled, total, color, icon }: {
 
 export function Step3({ nextStep }: Props) {
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-center px-4">
         <View className="mb-12">
           <Text className="text-3xl font-black text-white text-center leading-tight">
             Track the week{'\n'}
             <Text className="text-pastel-green">together.</Text>
           </Text>
-          <Text className="text-white/40 text-sm text-center mt-3 leading-relaxed px-2">
+          <Text className="text-pastel-blue text-sm text-center mt-3 leading-relaxed px-2">
             Agree on a weekly minimum. Watch each{'\n'}other's progress fill up in real time.
           </Text>
         </View>
 
         <View className="bg-[#1A1A1A] rounded-3xl border border-white/5 p-6 gap-6">
           <View className="flex-row items-center justify-between">
-            <Text className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
+            <Text className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
               This Week
             </Text>
             <View className="bg-white/5 px-3 py-1 rounded-full">
-              <Text className="text-[10px] text-white/40 font-bold">Goal: 3 workouts</Text>
+              <Text className="text-[10px] text-white/50 font-bold">Goal: 3 workouts</Text>
             </View>
           </View>
 
@@ -92,12 +92,12 @@ export function Step3({ nextStep }: Props) {
           />
         </View>
 
-        <Text className="text-white/30 text-xs text-center mt-6 italic">
+        <Text className="text-white/45 text-xs text-center mt-6 italic">
           Both bars visible. Both of you accountable.
         </Text>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-12 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-white py-4 rounded-2xl items-center active:opacity-80"

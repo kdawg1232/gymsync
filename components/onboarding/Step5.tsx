@@ -29,13 +29,13 @@ const STEPS = [
 
 export function Step5({ nextStep }: Props) {
   return (
-    <View className="flex-1 items-center pt-16 w-full">
+    <View className="flex-1 items-center w-full">
       <View className="flex-1 w-full max-w-sm justify-center px-4">
         <View className="mb-12">
           <Text className="text-3xl font-black text-white text-center leading-tight">
             You've got the idea.
           </Text>
-          <Text className="text-white/40 text-sm text-center mt-3 leading-relaxed px-2">
+          <Text className="text-pastel-blue text-sm text-center mt-3 leading-relaxed px-2">
             Now let's build your partnership.{'\n'}It takes 2 minutes.
           </Text>
         </View>
@@ -57,7 +57,7 @@ export function Step5({ nextStep }: Props) {
                   </View>
                   <View className="flex-1">
                     <Text className="text-white font-bold text-sm">{item.title}</Text>
-                    <Text className="text-white/30 text-xs mt-0.5">{item.subtitle}</Text>
+                    <Text className="text-white/40 text-xs mt-0.5">{item.subtitle}</Text>
                   </View>
                 </View>
                 <View
@@ -74,7 +74,7 @@ export function Step5({ nextStep }: Props) {
         </View>
       </View>
 
-      <View className="w-full pb-8 pt-4 max-w-sm px-4">
+      <View className="w-full pt-4 pb-2 mb-12 max-w-sm px-4 self-center">
         <Pressable
           onPress={nextStep}
           className="w-full bg-pastel-orange py-4 rounded-2xl items-center active:opacity-80"

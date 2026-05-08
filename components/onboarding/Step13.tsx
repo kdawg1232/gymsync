@@ -30,14 +30,14 @@ export function Step13({ onComplete }: Props) {
   };
 
   return (
-    <View className="flex-1 items-center pt-16 w-full">
-      <View className="flex-1 w-full max-w-sm justify-center items-center px-4">
-        <HeartPulse size={64} color={Colors.pastelRed} style={{ marginBottom: 32 }} />
+    <View className="flex-1 items-center w-full justify-between">
+      <View className="flex-1 w-full max-w-sm justify-center items-center px-4 pb-6">
+        <HeartPulse size={64} color={Colors.pastelRed} style={{ marginBottom: 24 }} />
 
         <Text className="text-4xl font-black text-white text-center leading-tight mb-6">
           Help us grow.
         </Text>
-        <Text className="text-white/60 text-base text-center leading-relaxed mb-12 px-2">
+        <Text className="text-pastel-blue text-base text-center leading-relaxed mb-8 px-2">
           We're building this for couples like you. Allow notifications so we can send you nudges
           and updates.
         </Text>
@@ -54,13 +54,13 @@ export function Step13({ onComplete }: Props) {
             </Text>
           </Pressable>
           <Pressable onPress={onComplete} className="w-full py-4 rounded-2xl items-center">
-            <Text className="text-white/40 font-bold text-base">Maybe Later</Text>
+            <Text className="text-white/50 font-bold text-base">Maybe Later</Text>
           </Pressable>
         </View>
       </View>
 
-      <View className="w-full pb-12 items-center">
-        <Text className="text-white/30 text-xs text-center">
+      <View className="w-full pt-2 pb-2 mb-12 items-center px-4 self-center">
+        <Text className="text-white/40 text-xs text-center">
           By finishing, you agree to our Terms & Privacy Policy.
         </Text>
       </View>

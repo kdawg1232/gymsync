@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { AnimatePresence, MotiView } from 'moti';
 import { ChevronLeft } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Step0 } from './Step0';
 import { Step1 } from './Step1';
@@ -93,9 +94,12 @@ export function OnboardingFlow({
   }
 
   return (
-    <View className="absolute inset-0 z-50 bg-[#0A0A0A] items-center">
+    <SafeAreaView
+      className="absolute inset-0 z-50 bg-[#0A0A0A] items-center"
+      edges={['top', 'bottom']}
+    >
       {step > 0 && (
-        <View className="w-full max-w-sm flex-row items-center gap-4 pt-14 px-6">
+        <View className="w-full max-w-sm flex-row items-center gap-4 px-6 pt-2 pb-3">
           <Pressable onPress={prevStep} className="p-2 -ml-2">
             <ChevronLeft size={24} color="rgba(255,255,255,0.6)" />
           </Pressable>
@@ -118,12 +122,12 @@ export function OnboardingFlow({
             animate={{ opacity: 1, translateX: 0 }}
             exit={{ opacity: 0, translateX: -20 }}
             transition={{ type: 'timing', duration: 250 }}
-            className="flex-1 w-full px-6"
+            className={`flex-1 w-full px-6 ${step === 0 ? 'pt-8' : 'pt-2'}`}
           >
             {renderStep()}
           </MotiView>
         </AnimatePresence>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

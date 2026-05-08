@@ -1,4 +1,14 @@
 import { supabase } from './supabase';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+
+async function compressImage(uri: string, maxWidth = 800, quality = 0.5): Promise<string> {
+  const result = await manipulateAsync(
+    uri,
+    [{ resize: { width: maxWidth } }],
+    { compress: quality, format: SaveFormat.JPEG },
+  );
+  return result.uri;
+}
 
 async function uploadFile(
   bucket: string,
@@ -8,13 +18,12 @@ async function uploadFile(
   const response = await fetch(uri);
   const blob = await response.blob();
 
-  const fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const filePath = `${path}.${fileExt}`;
+  const filePath = `${path}.jpg`;
 
   const { error } = await supabase.storage
     .from(bucket)
     .upload(filePath, blob, {
-      contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+      contentType: 'image/jpeg',
       upsert: true,
     });
 
@@ -25,13 +34,15 @@ async function uploadFile(
 }
 
 export async function uploadAvatar(userId: string, uri: string): Promise<string> {
-  return uploadFile('avatars', `${userId}/avatar`, uri);
+  const compressed = await compressImage(uri, 400, 0.6);
+  return uploadFile('avatars', `${userId}/avatar`, compressed);
 }
 
 export async function uploadWorkoutPhoto(
   userId: string,
   uri: string,
 ): Promise<string> {
+  const compressed = await compressImage(uri, 800, 0.5);
   const timestamp = Date.now();
-  return uploadFile('workout-photos', `${userId}/${timestamp}`, uri);
+  return uploadFile('workout-photos', `${userId}/${timestamp}`, compressed);
 }
