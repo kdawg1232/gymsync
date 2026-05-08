@@ -38,6 +38,8 @@ function withWidgetExtension(config) {
 import WidgetKit
 import SwiftUI
 
+// MARK: - Progress Widget
+
 struct GymSyncEntry: TimelineEntry {
     let date: Date
     let myCount: Int
@@ -124,20 +126,11 @@ struct GymSyncWidgetEntryView: View {
     var smallWidget: some View {
         VStack(spacing: 8) {
             HStack {
+                Spacer()
                 Text("GymSync")
                     .font(.system(size: 12, weight: .heavy))
                     .foregroundColor(.orange.opacity(0.8))
                 Spacer()
-                if entry.streak > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.orange)
-                        Text("\\(entry.streak)")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.orange)
-                    }
-                }
             }
 
             Spacer()
@@ -161,9 +154,21 @@ struct GymSyncWidgetEntryView: View {
 
             Spacer()
 
-            Text("\\(entry.daysLeft) days left")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.4))
+            HStack(spacing: 4) {
+                if entry.streak > 0 {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.orange)
+                    Text("\\(entry.streak)w")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.orange)
+                    Text("\\u{00B7}")
+                        .foregroundColor(.white.opacity(0.3))
+                }
+                Text("\\(entry.daysLeft) days left")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.4))
+            }
         }
         .padding()
         .containerBackground(for: .widget) {
@@ -172,12 +177,12 @@ struct GymSyncWidgetEntryView: View {
     }
 
     var mediumWidget: some View {
-        HStack(spacing: 16) {
-            // My Progress
+        HStack(spacing: 0) {
             VStack(spacing: 6) {
                 Text(entry.myName)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
 
                 ZStack {
                     CircularProgress(
@@ -196,31 +201,32 @@ struct GymSyncWidgetEntryView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
 
             VStack(spacing: 4) {
-                HStack {
-                    Text("GymSync")
-                        .font(.system(size: 13, weight: .heavy))
-                        .foregroundColor(.orange.opacity(0.8))
-                    Spacer()
-                    if entry.streak > 0 {
-                        HStack(spacing: 2) {
-                            Image(systemName: "flame.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.orange)
-                            Text("\\(entry.streak)w")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.orange)
-                        }
+                Spacer()
+                Text("GymSync")
+                    .font(.system(size: 13, weight: .heavy))
+                    .foregroundColor(.orange.opacity(0.8))
+
+                if entry.streak > 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.orange)
+                        Text("\\(entry.streak)w")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.orange)
                     }
                 }
                 Spacer()
                 Text("\\(entry.daysLeft) days left this week")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.white.opacity(0.4))
+                    .multilineTextAlignment(.center)
             }
+            .frame(maxWidth: .infinity)
 
-            // Partner Progress
             VStack(spacing: 6) {
                 Text(entry.partnerName)
                     .font(.system(size: 12, weight: .bold))
@@ -244,6 +250,7 @@ struct GymSyncWidgetEntryView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
         .padding()
         .containerBackground(for: .widget) {
@@ -252,8 +259,7 @@ struct GymSyncWidgetEntryView: View {
     }
 }
 
-@main
-struct GymSyncWidget: Widget {
+struct GymSyncProgressWidget: Widget {
     let kind: String = "GymSyncWidget"
 
     var body: some WidgetConfiguration {
@@ -263,6 +269,145 @@ struct GymSyncWidget: Widget {
         .configurationDisplayName("GymSync Progress")
         .description("Track your weekly workout progress at a glance.")
         .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// MARK: - Partner Photo Widget
+
+struct PartnerPhotoEntry: TimelineEntry {
+    let date: Date
+    let partnerName: String
+    let imageData: Data?
+    let hasPartner: Bool
+}
+
+struct PartnerPhotoProvider: TimelineProvider {
+    func placeholder(in context: Context) -> PartnerPhotoEntry {
+        PartnerPhotoEntry(date: Date(), partnerName: "Partner", imageData: nil, hasPartner: true)
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (PartnerPhotoEntry) -> Void) {
+        let info = loadPartnerInfo()
+        completion(PartnerPhotoEntry(date: Date(), partnerName: info.name, imageData: nil, hasPartner: info.hasPartner))
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<PartnerPhotoEntry>) -> Void) {
+        let info = loadPartnerInfo()
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+
+        if let urlStr = info.photoUrl, let url = URL(string: urlStr) {
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                let entry = PartnerPhotoEntry(
+                    date: Date(),
+                    partnerName: info.name,
+                    imageData: data,
+                    hasPartner: info.hasPartner
+                )
+                completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+            }.resume()
+        } else {
+            let entry = PartnerPhotoEntry(
+                date: Date(),
+                partnerName: info.name,
+                imageData: nil,
+                hasPartner: info.hasPartner
+            )
+            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        }
+    }
+
+    private func loadPartnerInfo() -> (name: String, photoUrl: String?, hasPartner: Bool) {
+        let defaults = UserDefaults(suiteName: "${appGroup}")
+        let jsonStr = defaults?.string(forKey: "widget_data") ?? ""
+
+        guard let data = jsonStr.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return ("Partner", nil, false)
+        }
+
+        let name = json["partnerName"] as? String ?? "Partner"
+        let url = json["partnerPhotoUrl"] as? String
+        let hasPartner = json["hasPartner"] as? Bool ?? false
+        return (name, url, hasPartner)
+    }
+}
+
+struct PartnerPhotoWidgetEntryView: View {
+    var entry: PartnerPhotoEntry
+
+    var body: some View {
+        ZStack {
+            if let data = entry.imageData, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: entry.hasPartner ? "camera.fill" : "person.badge.plus")
+                        .font(.system(size: 28))
+                        .foregroundColor(.white.opacity(0.15))
+                    Text(entry.hasPartner ? "No gym pic yet" : "No partner yet")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.2))
+                }
+            }
+
+            VStack {
+                HStack {
+                    Text("GymSync")
+                        .font(.system(size: 10, weight: .heavy))
+                        .foregroundColor(.orange.opacity(0.8))
+                    Spacer()
+                }
+                .padding(.top, 2)
+                Spacer()
+                HStack {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(entry.partnerName)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        if entry.imageData != nil {
+                            Text("Latest gym pic")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial.opacity(entry.imageData != nil ? 1 : 0))
+                .cornerRadius(8)
+            }
+        }
+        .padding(10)
+        .containerBackground(for: .widget) {
+            Color.black
+        }
+    }
+}
+
+struct GymSyncPartnerPhotoWidget: Widget {
+    let kind: String = "GymSyncPartnerPhoto"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: PartnerPhotoProvider()) { entry in
+            PartnerPhotoWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Partner's Gym Pic")
+        .description("See your partner's latest workout photo.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: - Widget Bundle
+
+@main
+struct GymSyncWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        GymSyncProgressWidget()
+        GymSyncPartnerPhotoWidget()
     }
 }
 `;

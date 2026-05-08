@@ -27,6 +27,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { NotificationPreference } from '@/types';
 
+const GYMSYNC_WEB_BASE = 'https://thegymsyncapp.netlify.app';
+
 export default function ProfileScreen() {
   const {
     user, profile, partnerProfile, pact,
@@ -537,22 +539,22 @@ export default function ProfileScreen() {
                   <SettingsMenuItem
                     icon={<Shield size={24} color={Colors.pastelPurple} />}
                     label="Privacy Policy"
-                    onPress={() => Linking.openURL('https://gymsync.app/privacy')}
+                    onPress={() => Linking.openURL(`${GYMSYNC_WEB_BASE}/privacy`)}
                   />
                   <SettingsMenuItem
                     icon={<FileText size={24} color={Colors.pastelYellow} />}
                     label="Terms of Service"
-                    onPress={() => Linking.openURL('https://gymsync.app/terms')}
+                    onPress={() => Linking.openURL(`${GYMSYNC_WEB_BASE}/terms`)}
                   />
                   <SettingsMenuItem
                     icon={<Check size={24} color={Colors.pastelGreen} />}
                     label="Request a Feature"
-                    onPress={() => Linking.openURL('mailto:feedback@gymsync.app?subject=Feature%20Request')}
+                    onPress={() => Linking.openURL('mailto:karsai1232@gmail.com?subject=Feature%20Request')}
                   />
                   <SettingsMenuItem
                     icon={<HelpCircle size={24} color={Colors.pastelPink} />}
                     label="Support"
-                    onPress={() => Linking.openURL('mailto:support@gymsync.app')}
+                    onPress={() => Linking.openURL(`${GYMSYNC_WEB_BASE}/support`)}
                   />
                 </View>
 

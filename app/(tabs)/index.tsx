@@ -7,6 +7,7 @@ import { useWorkoutLogs } from '@/hooks/useWorkoutLogs';
 import { Colors, MoodColors } from '@/constants/colors';
 import { useState, useCallback, useMemo } from 'react';
 import { getWeeklyStreak } from '@/lib/database';
+import { updateWidgetData } from '@/lib/widget';
 import { useEffect } from 'react';
 
 function PhotoDayGrid({ logs, userId, accentColor }: {
@@ -81,6 +82,34 @@ export default function HomeScreen() {
       getWeeklyStreak(user.id, goal).then(setStreak).catch(() => {});
     }
   }, [user?.id, goal, logs.length]);
+
+  // Sync widget data with real counts
+  useEffect(() => {
+    if (!profile || !pact) return;
+    const dayOfWeek = new Date().getDay();
+    const daysLeft = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+
+    const latestPartnerPhoto = partnerProfile
+      ? logs
+          .filter((l) => l.user_id === partnerProfile.id && l.image_url)
+          .sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime())[0]
+          ?.image_url ?? null
+      : null;
+
+    updateWidgetData({
+      myCount,
+      partnerCount,
+      goal: pact.goal,
+      myName: profile.name,
+      partnerName: partnerProfile?.name ?? 'Partner',
+      wager: pact.wager,
+      daysLeft,
+      streak,
+      hasPartner: !!partnerProfile,
+      partnerPhotoUrl: latestPartnerPhoto,
+      lastUpdated: new Date().toISOString(),
+    });
+  }, [profile, partnerProfile, pact, myCount, partnerCount, streak, logs]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

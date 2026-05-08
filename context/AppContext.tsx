@@ -9,7 +9,7 @@ import React, {
 import { type Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getProfile, getActivePact } from '@/lib/database';
-import { updateWidgetData, clearWidgetData } from '@/lib/widget';
+import { clearWidgetData } from '@/lib/widget';
 import type { Profile, Pact } from '@/types';
 
 interface AppState {
@@ -151,25 +151,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const isUser1 = pact ? pact.user1_id === user?.id : true;
 
-  // Sync widget data whenever pact/profile changes
-  useEffect(() => {
-    if (!profile || !pact) return;
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const daysLeft = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-
-    updateWidgetData({
-      myCount: 0,
-      partnerCount: 0,
-      goal: pact.goal,
-      myName: profile.name,
-      partnerName: partnerProfile?.name ?? 'Partner',
-      wager: pact.wager,
-      daysLeft,
-      streak: 0,
-      lastUpdated: now.toISOString(),
-    });
-  }, [profile, partnerProfile, pact]);
+  // Widget data is synced from the Home screen where workout counts are available
 
   const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();

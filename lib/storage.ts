@@ -2,12 +2,16 @@ import { supabase } from './supabase';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 async function compressImage(uri: string, maxWidth = 800, quality = 0.5): Promise<string> {
-  const result = await manipulateAsync(
-    uri,
-    [{ resize: { width: maxWidth } }],
-    { compress: quality, format: SaveFormat.JPEG },
-  );
-  return result.uri;
+  try {
+    const result = await manipulateAsync(
+      uri,
+      [{ resize: { width: maxWidth } }],
+      { compress: quality, format: SaveFormat.JPEG },
+    );
+    return result.uri;
+  } catch {
+    return uri;
+  }
 }
 
 async function uploadFile(
@@ -18,12 +22,14 @@ async function uploadFile(
   const response = await fetch(uri);
   const blob = await response.blob();
 
-  const filePath = `${path}.jpg`;
+  const ext = uri.includes('.png') ? 'png' : 'jpg';
+  const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  const filePath = `${path}.${ext}`;
 
   const { error } = await supabase.storage
     .from(bucket)
     .upload(filePath, blob, {
-      contentType: 'image/jpeg',
+      contentType,
       upsert: true,
     });
 
